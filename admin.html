@@ -176,6 +176,7 @@
   let fdb = null, auth = null, demo = false, started = false, purgeDone = false;
   let feedback = [], buildings = [], roofs = [], logs = [];
   let fbFilter = "all";
+  let view = "fb";
 
   function toast(msg) {
     const t = $("toast");
@@ -245,9 +246,12 @@
             }
           };
         },
-        onSnapshot(next, onErr) {
+        onSnapshot(next, onErr, opts) {
+          const limit = opts && opts.limit;
           const load = async () => {
-            const { data, error } = await client.from(table).select("id,data,created_at").order("created_at", { ascending: true });
+            let q = client.from(table).select("id,data,created_at").order("created_at", { ascending: !limit });
+            if (limit) q = q.limit(limit);
+            const { data, error } = await q;
             if (error) { if (onErr) onErr(error); return; }
             next({ docs: data.map(r => ({ id: r.id, data: () => r.data })) });
           };
@@ -433,14 +437,19 @@
     "</div>";
   }
 
+  function renderView(v) {
+    if (v === "fb") renderFeedback();
+    else if (v === "b") renderBuildings();
+    else if (v === "r") renderRoofs();
+    else if (v === "log") renderLog();
+    else if (v === "trash") renderTrash();
+    else if (v === "backup") renderBackup();
+  }
+
+  // обновляем счётчики и только открытую вкладку
   function renderAll() {
     counts();
-    renderFeedback();
-    renderBuildings();
-    renderRoofs();
-    renderLog();
-    renderTrash();
-    renderBackup();
+    renderView(view);
   }
 
   // ---------- данные ----------
@@ -452,7 +461,7 @@
     fdb.collection("feedback").onSnapshot((s) => { feedback = toList(s); renderAll(); }, onErr);
     fdb.collection("buildings").onSnapshot((s) => { buildings = toList(s); renderAll(); purgeOld(); }, onErr);
     fdb.collection("roofs").onSnapshot((s) => { roofs = toList(s); renderAll(); purgeOld(); }, onErr);
-    fdb.collection("log").onSnapshot((s) => { logs = toList(s); renderLog(); }, onErr);
+    fdb.collection("log").onSnapshot((s) => { logs = toList(s); renderAll(); }, onErr, { limit: 300 });
   }
 
   function startDemo() {
@@ -486,6 +495,8 @@
   document.querySelectorAll(".tab").forEach(tabBtn => tabBtn.addEventListener("click", () => {
     document.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t === tabBtn));
     ["fb", "b", "r", "log", "trash", "backup"].forEach(v => $("v-" + v).classList.toggle("hidden", v !== tabBtn.dataset.view));
+    view = tabBtn.dataset.view;
+    renderView(view);
   }));
 
   // ---------- действия ----------
