@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.vicas950.twa",
+        "sha256_cert_fingerprints": ["76:B2:61:B6:8E:B1:C9:6B:4D:55:B0:17:D7:B1:FC:74:77:00:71:8D:93:C4:3D:E4:4D:8F:E2:AB:A6:DE:2A:3B"]
+      }
+    }]
