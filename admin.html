@@ -65,7 +65,7 @@
 
   .card { background: var(--glass); border: 1px solid var(--edge); border-radius: 22px; padding: 18px;
     backdrop-filter: blur(24px) saturate(160%); -webkit-backdrop-filter: blur(24px) saturate(160%);
-    box-shadow: inset 0 1px 0 var(--hi), 0 18px 40px rgba(0,0,0,.25); animation: rise .5s cubic-bezier(.2,.8,.2,1) both; }
+    box-shadow: inset 0 1px 0 var(--hi), 0 18px 40px rgba(0,0,0,.25); }
   .card:hover { border-color: rgba(255,255,255,.22); }
   @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
   .meta { color: var(--muted); font-size: 12.5px; margin-bottom: 8px; letter-spacing: .02em; }
@@ -138,6 +138,7 @@
     <button class="tab on" data-view="fb">Отзывы <span class="count" id="c-fb"></span></button>
     <button class="tab" data-view="b">Здания <span class="count" id="c-b"></span></button>
     <button class="tab" data-view="r">Руфы <span class="count" id="c-r"></span></button>
+    <button class="tab" data-view="dev">Устройства <span class="count" id="c-dev"></span></button>
     <button class="tab" data-view="log">Журнал</button>
     <button class="tab" data-view="trash">Корзина <span class="count" id="c-trash"></span></button>
     <button class="tab" data-view="backup">Резервная копия</button>
@@ -146,6 +147,7 @@
     <section id="v-fb"></section>
     <section id="v-b" class="hidden"></section>
     <section id="v-r" class="hidden"></section>
+    <section id="v-dev" class="hidden"></section>
     <section id="v-log" class="hidden"></section>
     <section id="v-trash" class="hidden"></section>
     <section id="v-backup" class="hidden"></section>
@@ -177,6 +179,7 @@
   let feedback = [], buildings = [], roofs = [], logs = [];
   let fbFilter = "all";
   let view = "fb";
+  let devices = [];
 
   function toast(msg) {
     const t = $("toast");
@@ -350,6 +353,7 @@
     $("c-b").textContent = active(buildings).length || "";
     $("c-r").textContent = active(roofs).length || "";
     $("c-trash").textContent = trashed().length || "";
+    $("c-dev").textContent = devices.length || "";
   }
 
   function renderFeedback() {
@@ -429,6 +433,16 @@
       : '<div class="empty">Корзина пуста</div>';
   }
 
+  function renderDevices() {
+    const list = devices.slice().sort((x, y) => (y.lastSeen || 0) - (x.lastSeen || 0));
+    $("v-dev").innerHTML = list.length ? list.map(d =>
+      '<div class="card item"><div class="grow"><b>' + esc(d.name || "Аноним") + "</b>" +
+        '<div class="meta">' + esc(d.info || "") + (d.version ? " · версия " + esc(d.version) : "") + "</div>" +
+        '<div class="meta">Первый вход: ' + esc(fmt(d.firstSeen)) + " · последний: " + esc(fmt(d.lastSeen)) + "</div>" +
+      "</div></div>"
+    ).join("") : '<div class="empty">Устройств пока нет. Они появятся, когда кто-то откроет приложение.</div>';
+  }
+
   function renderBackup() {
     $("v-backup").innerHTML = '<div class="card log-card">' +
       '<h2 style="margin:0 0 8px;font-size:18px">Резервная копия</h2>' +
@@ -442,14 +456,17 @@
     else if (v === "b") renderBuildings();
     else if (v === "r") renderRoofs();
     else if (v === "log") renderLog();
+    else if (v === "dev") renderDevices();
     else if (v === "trash") renderTrash();
     else if (v === "backup") renderBackup();
   }
 
   // обновляем счётчики и только открытую вкладку
   function renderAll() {
+    const y = window.scrollY;
     counts();
     renderView(view);
+    if (window.scrollY !== y) window.scrollTo(0, y);
   }
 
   // ---------- данные ----------
@@ -462,6 +479,7 @@
     fdb.collection("buildings").onSnapshot((s) => { buildings = toList(s); renderAll(); purgeOld(); }, onErr);
     fdb.collection("roofs").onSnapshot((s) => { roofs = toList(s); renderAll(); purgeOld(); }, onErr);
     fdb.collection("log").onSnapshot((s) => { logs = toList(s); renderAll(); }, onErr, { limit: 300 });
+    fdb.collection("devices").onSnapshot((s) => { devices = toList(s); renderAll(); }, onErr);
   }
 
   function startDemo() {
@@ -486,6 +504,10 @@
       { id: "l1", text: "Ответил на отзыв от «Vicas»", at: now - 86400e3 },
       { id: "l2", text: "Удалил здание «Старый элеватор» (в корзине 7 дней)", at: now - 2 * 86400e3 }
     ];
+    devices = [
+      { id: "d1", key: "demo1", name: "Vicas", info: "приложение, Android", version: "1.0.9", firstSeen: now - 5 * 86400e3, lastSeen: now - 3600e3 },
+      { id: "d2", key: "demo2", name: "Матвей", info: "браузер, Android", version: "1.0.9", firstSeen: now - 2 * 86400e3, lastSeen: now - 7200e3 }
+    ];
     showApp();
     renderAll();
     toast("Демо-режим: изменения не сохраняются");
@@ -494,7 +516,7 @@
   // ---------- переключение разделов ----------
   document.querySelectorAll(".tab").forEach(tabBtn => tabBtn.addEventListener("click", () => {
     document.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t === tabBtn));
-    ["fb", "b", "r", "log", "trash", "backup"].forEach(v => $("v-" + v).classList.toggle("hidden", v !== tabBtn.dataset.view));
+    ["fb", "b", "r", "dev", "log", "trash", "backup"].forEach(v => $("v-" + v).classList.toggle("hidden", v !== tabBtn.dataset.view));
     view = tabBtn.dataset.view;
     renderView(view);
   }));

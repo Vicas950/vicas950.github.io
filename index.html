@@ -111,7 +111,7 @@
     background: var(--glass); border: 1px solid var(--glass-edge); border-radius: 24px; overflow: hidden;
     backdrop-filter: blur(22px) saturate(160%); -webkit-backdrop-filter: blur(22px) saturate(160%);
     box-shadow: 0 18px 40px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.35);
-    margin-bottom: 14px; animation: cardIn .55s cubic-bezier(.2,.8,.2,1) both;
+    margin-bottom: 14px;
   }
   .cover {
     position: relative; height: 150px; background-size: cover; background-position: center;
@@ -383,7 +383,7 @@
         <div id="fbList"></div>
       </div>
 
-      <div class="ver">Версия 1.0.8</div>
+      <div class="ver">Версия 1.1.0</div>
     </section>
   </div>
 
@@ -1200,6 +1200,22 @@
 
   // ---------- журнал: каждое действие в приложении ----------
   let authErr = "";
+  // сообщает админке, что приложение открыли (имя, тип устройства, режим)
+  function touchDevice(id) {
+    if (!sbClient || !id) return;
+    try {
+      const standalone = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
+      const ua = navigator.userAgent || "";
+      const platform = /Android/i.test(ua) ? "Android" : /iPhone|iPad/i.test(ua) ? "iPhone" : /Windows/i.test(ua) ? "Windows" : /Mac/i.test(ua) ? "Mac" : "Другое";
+      sbClient.rpc("touch_device", {
+        p_key: id,
+        p_name: myName(),
+        p_info: (standalone ? "приложение" : "браузер") + ", " + platform,
+        p_version: "1.1.0"
+      }).then(function () {});
+    } catch (e) {}
+  }
+
   function logAct(text) {
     const who = myName();
     try {
@@ -1314,7 +1330,7 @@
   }
 
   initDb();
-  getMyId().then(id => { myId = id; renderAll(); renderFeedback(); });
+  getMyId().then(id => { myId = id; renderAll(); renderFeedback(); touchDevice(id); });
   renderAll();
   renderFeedback();
   requestAnimationFrame(() => moveIndicator(tabs[0]));
