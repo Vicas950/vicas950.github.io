@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Руфы — админ</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #05060d;
+    --glass: rgba(255,255,255,.06);
+    --glass-strong: rgba(255,255,255,.12);
+    --edge: rgba(255,255,255,.14);
+    --hi: rgba(255,255,255,.35);
+    --muted: rgba(226,232,255,.62);
+    --accent: #22d3ee;
+    --accent2: #8b5cf6;
+    --danger: #f43f5e;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, "Segoe UI", Inter, Roboto, sans-serif; background: var(--bg); color: #eef2ff; min-height: 100vh; overflow-x: hidden; }
+
+  .bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+    background-image: linear-gradient(rgba(34,211,238,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,.05) 1px, transparent 1px);
+    background-size: 48px 48px; }
+  .bg i { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .55; animation: drift 18s ease-in-out infinite alternate; }
+  .bg i:nth-child(1) { width: 520px; height: 520px; background: #4338ca; top: -160px; left: -120px; }
+  .bg i:nth-child(2) { width: 460px; height: 460px; background: #0891b2; top: 35%; right: -140px; animation-delay: -6s; }
+  .bg i:nth-child(3) { width: 420px; height: 420px; background: #7c3aed; bottom: -180px; left: 30%; animation-delay: -11s; }
+  @keyframes drift { to { transform: translate(60px, -40px) scale(1.1); } }
+
+  #login, #app { position: relative; z-index: 1; }
+  .hidden { display: none !important; }
+
+  .login { max-width: 400px; margin: 14vh auto; padding: 32px; border-radius: 28px; background: var(--glass); border: 1px solid var(--edge);
+    backdrop-filter: blur(28px) saturate(170%); -webkit-backdrop-filter: blur(28px) saturate(170%);
+    box-shadow: inset 0 1px 0 var(--hi), 0 30px 60px rgba(0,0,0,.4); }
+  .login h1 { margin: 0 0 16px; font-size: 24px; }
+  .login .btn.primary { width: 100%; padding: 12px; font-size: 15px; }
+
+  header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; padding: 14px 26px; margin: 14px 14px 0;
+    border-radius: 22px; background: var(--glass); border: 1px solid var(--edge);
+    backdrop-filter: blur(28px) saturate(170%); -webkit-backdrop-filter: blur(28px) saturate(170%);
+    box-shadow: inset 0 1px 0 var(--hi); position: sticky; top: 14px; z-index: 5; }
+  header h1 { font-size: 17px; margin: 0; letter-spacing: .02em; display: flex; align-items: center; gap: 10px; }
+  header h1::after { content: "ADMIN"; font-size: 10px; letter-spacing: .14em; padding: 4px 9px; border-radius: 999px; font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #00121a; }
+  #app { display: grid; grid-template-columns: 250px 1fr; grid-template-rows: auto 1fr; min-height: 100vh; }
+
+  .tabs { grid-column: 1; grid-row: 2; display: flex; flex-direction: column; gap: 8px; padding: 22px 14px; align-self: start; position: sticky; top: 96px; }
+  .tab { text-align: left; padding: 13px 16px; border-radius: 16px; border: 1px solid transparent; background: transparent; color: var(--muted);
+    font: inherit; font-size: 15px; cursor: pointer; transition: background .25s, color .25s, transform .2s; display: flex; justify-content: space-between; align-items: center; }
+  .tab:hover { background: var(--glass); color: #fff; }
+  .tab.on { background: linear-gradient(135deg, rgba(34,211,238,.22), rgba(139,92,246,.22)); border-color: rgba(34,211,238,.4); color: #fff; box-shadow: inset 0 1px 0 var(--hi); }
+  .tab:active { transform: scale(.97); }
+  .count { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,.12); }
+
+  main { grid-column: 2; grid-row: 2; padding: 22px 28px 60px 14px; }
+  main section { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; align-items: start; }
+  .empty { grid-column: 1 / -1; color: var(--muted); text-align: center; padding: 60px 0; }
+
+  .filters { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .chip { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--edge); background: var(--glass); color: var(--muted); font: inherit; font-size: 13.5px; cursor: pointer; }
+  .chip.on { color: #fff; border-color: rgba(34,211,238,.5); background: rgba(34,211,238,.14); }
+
+  .card { background: var(--glass); border: 1px solid var(--edge); border-radius: 22px; padding: 18px;
+    backdrop-filter: blur(24px) saturate(160%); -webkit-backdrop-filter: blur(24px) saturate(160%);
+    box-shadow: inset 0 1px 0 var(--hi), 0 18px 40px rgba(0,0,0,.25); animation: rise .5s cubic-bezier(.2,.8,.2,1) both; }
+  .card:hover { border-color: rgba(255,255,255,.22); }
+  @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  .meta { color: var(--muted); font-size: 12.5px; margin-bottom: 8px; letter-spacing: .02em; }
+  .text { white-space: pre-wrap; word-break: break-word; font-size: 15px; line-height: 1.45; }
+  .reply { margin-top: 10px; padding: 10px 12px; border-radius: 14px; background: rgba(34,211,238,.12); border: 1px solid rgba(34,211,238,.25); font-size: 14px; }
+  .sbadge { display: inline-block; font-size: 12px; padding: 3px 10px; border-radius: 999px; margin-left: 6px; background: rgba(255,255,255,.1); }
+  .sbadge.new { background: rgba(251,191,36,.2); color: #fde68a; }
+  .sbadge.work { background: rgba(96,165,250,.2); color: #bfdbfe; }
+  .sbadge.done { background: rgba(52,211,153,.2); color: #a7f3d0; }
+  .sbadge.no { background: rgba(148,163,184,.2); color: #cbd5e1; }
+
+  textarea, input { width: 100%; padding: 11px 12px; border-radius: 14px; border: 1px solid var(--edge); background: rgba(5,6,13,.5); color: #fff;
+    font: inherit; font-size: 15px; margin-top: 10px; outline: none; transition: border-color .2s, box-shadow .2s; }
+  textarea:focus, input:focus { border-color: rgba(34,211,238,.6); box-shadow: 0 0 0 4px rgba(34,211,238,.12); }
+  textarea { min-height: 64px; resize: vertical; }
+  .row { display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+
+  .btn { padding: 9px 15px; border-radius: 999px; border: 1px solid var(--edge); background: var(--glass-strong); color: #fff; font: inherit; font-size: 13.5px;
+    cursor: pointer; backdrop-filter: blur(14px); transition: transform .2s, background .2s; }
+  .btn:active { transform: scale(.94); }
+  .btn.primary { background: linear-gradient(135deg, var(--accent), #6366f1); border-color: transparent; color: #00121a; font-weight: 600; }
+  .btn.danger { background: rgba(244,63,94,.16); border-color: rgba(244,63,94,.5); color: #fecdd3; }
+  .btn.ok { background: rgba(52,211,153,.16); border-color: rgba(52,211,153,.5); color: #a7f3d0; }
+  .btn.sure { background: var(--danger); border-color: var(--danger); color: #fff; }
+  .btn.on { background: linear-gradient(135deg, rgba(34,211,238,.35), rgba(139,92,246,.35)); border-color: rgba(34,211,238,.6); }
+
+  .thumb { width: 70px; height: 70px; border-radius: 16px; background-size: cover; background-position: center; background-color: #111827; flex: 0 0 70px; border: 1px solid var(--edge); }
+  .item { display: flex; gap: 14px; align-items: center; }
+  .item .grow { flex: 1; min-width: 0; }
+  .item b { font-size: 15px; }
+
+  .log-card { grid-column: 1 / -1; }
+  .log-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--edge); font-size: 14.5px; }
+  .log-item:last-child { border-bottom: 0; }
+  .log-item time { color: var(--muted); font-size: 12.5px; white-space: nowrap; min-width: 120px; padding-top: 2px; }
+
+  .err { color: #fda4af; font-size: 14px; min-height: 20px; margin-top: 10px; }
+  .toast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 20px); background: rgba(15,18,32,.8); border: 1px solid var(--edge);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 11px 18px; border-radius: 999px; font-size: 14px;
+    opacity: 0; transition: opacity .3s, transform .3s; pointer-events: none; z-index: 20; box-shadow: inset 0 1px 0 var(--hi); }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (max-width: 820px) {
+    #app { grid-template-columns: 1fr; }
+    .tabs { grid-row: auto; flex-direction: row; flex-wrap: wrap; position: static; padding: 14px; }
+    .tab { flex: 1 1 30%; text-align: center; justify-content: center; }
+    main { grid-column: 1; grid-row: auto; padding: 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<!-- Вход -->
+<div id="login" class="login hidden">
+  <h1>Вход администратора</h1>
+  <input id="email" type="email" placeholder="Почта" autocomplete="username">
+  <input id="pass" type="password" placeholder="Пароль" autocomplete="current-password">
+  <div class="row"><button class="btn primary" id="loginBtn">Войти</button></div>
+  <div class="err" id="loginErr"></div>
+</div>
+
+<!-- Панель -->
+<div id="app" class="hidden">
+  <header>
+    <h1>Руфы</h1>
+    <button class="btn" id="logoutBtn">Выйти</button>
+  </header>
+  <nav class="tabs">
+    <button class="tab on" data-view="fb">Отзывы <span class="count" id="c-fb"></span></button>
+    <button class="tab" data-view="b">Здания <span class="count" id="c-b"></span></button>
+    <button class="tab" data-view="r">Руфы <span class="count" id="c-r"></span></button>
+    <button class="tab" data-view="log">Журнал</button>
+    <button class="tab" data-view="trash">Корзина <span class="count" id="c-trash"></span></button>
+    <button class="tab" data-view="backup">Резервная копия</button>
+  </nav>
+  <main>
+    <section id="v-fb"></section>
+    <section id="v-b" class="hidden"></section>
+    <section id="v-r" class="hidden"></section>
+    <section id="v-log" class="hidden"></section>
+    <section id="v-trash" class="hidden"></section>
+    <section id="v-backup" class="hidden"></section>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+
+<script>
+(function () {
+  /* ============================================================
+     База: Supabase. Publishable-ключ публичный, его можно держать в коде.
+     ============================================================ */
+  const SUPABASE_URL = "https://dgxkkxkynowjxbbpwqhd.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_kgvEJe5LEfb42i5iDqZ0dg_1-SocVD3";
+  const ADMIN_UID = "18de5a60-ee09-45f3-bb4c-67337a91db4d";
+  const TRASH_DAYS = 7;
+  const FB_TYPES = { bug: "🐞 Баг", todo: "🛠 Недоделка", idea: "💡 Идея" };
+  const STATUSES = { new: "Новое", work: "В работе", done: "Сделано", no: "Не будем" };
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+
+  let fdb = null, auth = null, demo = false, started = false, purgeDone = false;
+  let feedback = [], buildings = [], roofs = [], logs = [];
+  let fbFilter = "all";
+
+  function toast(msg) {
+    const t = $("toast");
+    t.textContent = msg; t.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => t.classList.remove("show"), 2400);
+  }
+
+  // Двойное нажатие вместо confirm()
+  function armDelete(el) {
+    if (el.dataset.armed === "1") { el.dataset.armed = ""; return true; }
+    el.dataset.armed = "1";
+    if (!el.dataset.label) el.dataset.label = el.textContent;
+    el.textContent = "Точно?";
+    el.classList.add("sure");
+    setTimeout(() => {
+      if (el.dataset.armed === "1") {
+        el.dataset.armed = ""; el.textContent = el.dataset.label; el.classList.remove("sure");
+      }
+    }, 3000);
+    return false;
+  }
+
+  const fmt = (ts) => ts ? new Date(ts).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
+  const statusOf = (f) => f.status || "new";
+  const titleOf = (b) => b ? (b.name || b.address) : "удалённое здание";
+  const bOf = (id) => buildings.find(b => b.id === id);
+  const active = (arr) => arr.filter(x => !x.deletedAt);
+  const trashed = () => [
+    ...buildings.filter(x => x.deletedAt).map(x => ({ col: "buildings", item: x, label: "здание «" + titleOf(x) + "»" })),
+    ...roofs.filter(x => x.deletedAt).map(x => ({ col: "roofs", item: x, label: "руф «" + titleOf(bOf(x.buildingId)) + "»" })),
+    ...feedback.filter(x => x.deletedAt).map(x => ({ col: "feedback", item: x, label: "отзыв от «" + (x.author || "Аноним") + "»" }))
+  ].sort((a, b) => (b.item.deletedAt || 0) - (a.item.deletedAt || 0));
+
+  // ---------- Supabase: тот же интерфейс, что у Firestore ----------
+  let sbClient = null;
+  function makeSupabaseDb(client) {
+    const loaders = {};
+    // несколько изменений подряд — одна загрузка (не дёргаем экран на каждое изменение)
+    const timers = {};
+    const reload = (table) => {
+      clearTimeout(timers[table]);
+      timers[table] = setTimeout(() => (loaders[table] || []).forEach(fn => fn()), 150);
+    };
+    function collection(table) {
+      return {
+        async add(data) {
+          const { data: row, error } = await client.from(table).insert({ data }).select("id").single();
+          if (error) throw error;
+          reload(table);
+          return { id: row.id };
+        },
+        doc(id) {
+          return {
+            id,
+            async update(patch) {
+              const cur = await client.from(table).select("data").eq("id", id).single();
+              if (cur.error) throw cur.error;
+              const { error } = await client.from(table).update({ data: { ...cur.data.data, ...patch } }).eq("id", id);
+              if (error) throw error;
+              reload(table);
+            },
+            async delete() {
+              const { error } = await client.from(table).delete().eq("id", id);
+              if (error) throw error;
+              reload(table);
+            }
+          };
+        },
+        onSnapshot(next, onErr) {
+          const load = async () => {
+            const { data, error } = await client.from(table).select("id,data,created_at").order("created_at", { ascending: true });
+            if (error) { if (onErr) onErr(error); return; }
+            next({ docs: data.map(r => ({ id: r.id, data: () => r.data })) });
+          };
+          (loaders[table] = loaders[table] || []).push(load);
+          load();
+          client.channel("rt-" + table).on("postgres_changes", { event: "*", schema: "public", table: table }, () => reload(table)).subscribe();
+          return () => {};
+        }
+      };
+    }
+    return { collection };
+  }
+
+  // ---------- запись: Supabase или демо ----------
+  function listOf(col) { return col === "feedback" ? feedback : col === "roofs" ? roofs : buildings; }
+  async function dbUpd(col, id, patch) {
+    if (demo) { Object.assign(listOf(col).find(x => x.id === id), patch); renderAll(); return; }
+    await fdb.collection(col).doc(id).update(patch);
+  }
+  async function dbHardDel(col, id) {
+    if (demo) {
+      const arr = listOf(col);
+      const i = arr.findIndex(x => x.id === id);
+      if (i >= 0) arr.splice(i, 1);
+      renderAll();
+      return;
+    }
+    await fdb.collection(col).doc(id).delete();
+  }
+  async function log(text) {
+    const entry = { text, who: "Админ", at: Date.now() };
+    if (demo) { logs.unshift({ id: "l" + Date.now(), ...entry }); renderLog(); counts(); return; }
+    await fdb.collection("log").add(entry);
+  }
+
+  // Мягкое удаление: попадает в корзину на 7 дней
+  async function softDel(col, id, label) {
+    const now = Date.now();
+    await dbUpd(col, id, { deletedAt: now });
+    if (col === "buildings") {
+      for (const r of roofs.filter(x => x.buildingId === id && !x.deletedAt)) {
+        await dbUpd("roofs", r.id, { deletedAt: now });
+      }
+    }
+    await log("Удалил " + label + " (в корзине " + TRASH_DAYS + " дней)");
+  }
+  async function restore(col, id, label) {
+    const item = listOf(col).find(x => x.id === id);
+    const stamp = item ? item.deletedAt : 0;
+    await dbUpd(col, id, { deletedAt: null });
+    if (col === "buildings") {
+      for (const r of roofs.filter(x => x.buildingId === id && x.deletedAt === stamp)) {
+        await dbUpd("roofs", r.id, { deletedAt: null });
+      }
+    }
+    await log("Восстановил " + label);
+  }
+  async function hardDel(col, id, label) {
+    if (col === "buildings") {
+      for (const r of roofs.filter(x => x.buildingId === id)) await dbHardDel("roofs", r.id);
+    }
+    await dbHardDel(col, id);
+    await log("Окончательно удалил " + label);
+  }
+  // Автоочистка: всё, что лежит в корзине дольше 7 дней, удаляется навсегда (один раз за сессию)
+  async function purgeOld() {
+    if (purgeDone) return;
+    purgeDone = true;
+    const limit = Date.now() - TRASH_DAYS * 86400000;
+    const old = trashed().filter(t => t.item.deletedAt < limit);
+    for (const t of old) await hardDel(t.col, t.item.id, t.label);
+    if (old.length) toast("Из корзины очищено: " + old.length);
+  }
+
+  // ---------- вход ----------
+  function showLogin(msg) {
+    $("app").classList.add("hidden");
+    $("login").classList.remove("hidden");
+    $("loginErr").textContent = msg || "";
+  }
+  function showApp() {
+    $("login").classList.add("hidden");
+    $("app").classList.remove("hidden");
+  }
+  async function doLogin() {
+    const email = $("email").value.trim(), pass = $("pass").value;
+    if (!email || !pass) { $("loginErr").textContent = "Введи почту и пароль"; return; }
+    $("loginErr").textContent = "";
+    try { await auth.signInWithEmailAndPassword(email, pass); }
+    catch (err) { $("loginErr").textContent = "Не удалось войти: " + (err.code || err.message); }
+  }
+
+  // ---------- рендер ----------
+  function counts() {
+    $("c-fb").textContent = active(feedback).filter(f => statusOf(f) === "new").length || "";
+    $("c-b").textContent = active(buildings).length || "";
+    $("c-r").textContent = active(roofs).length || "";
+    $("c-trash").textContent = trashed().length || "";
+  }
+
+  function renderFeedback() {
+    const list = active(feedback)
+      .filter(f => fbFilter === "all" || statusOf(f) === fbFilter)
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    const filters = '<div class="filters">' +
+      [["all", "Все"], ["new", "Новые"], ["work", "В работе"], ["done", "Сделано"], ["no", "Не будем"]]
+        .map(([k, v]) => '<button class="chip ' + (fbFilter === k ? "on" : "") + '" data-ffilter="' + k + '">' + v + "</button>").join("") +
+      "</div>";
+    const cards = list.length ? list.map(f => {
+      const st = statusOf(f);
+      return '<div class="card">' +
+        '<div class="meta">' + esc(FB_TYPES[f.type] || "") + " · " + esc(f.author || "Аноним") + " · " + esc(fmt(f.createdAt)) +
+          '<span class="sbadge ' + st + '">' + STATUSES[st] + "</span></div>" +
+        '<div class="text">' + esc(f.text) + "</div>" +
+        (f.reply ? '<div class="reply"><b>Твой ответ:</b> ' + esc(f.reply) + "</div>" : "") +
+        '<textarea data-fid="' + esc(f.id) + '" placeholder="Ответить...">' + "</textarea>" +
+        '<div class="row">' +
+          Object.keys(STATUSES).map(k =>
+            '<button class="btn ' + (st === k ? "on" : "") + '" data-act="fb-status" data-id="' + esc(f.id) + '" data-st="' + k + '">' + STATUSES[k] + "</button>").join("") +
+        "</div>" +
+        '<div class="row">' +
+          '<button class="btn primary" data-act="fb-reply" data-id="' + esc(f.id) + '">Ответить</button>' +
+          '<button class="btn danger" data-act="soft-fb" data-id="' + esc(f.id) + '">В корзину</button>' +
+        "</div></div>";
+    }).join("") : '<div class="empty">Нет сообщений в этом фильтре</div>';
+    $("v-fb").innerHTML = filters + cards;
+  }
+
+  function renderBuildings() {
+    const list = active(buildings).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    $("v-b").innerHTML = list.length ? list.map(b => {
+      const photo = (b.photos && b.photos[0]) || b.photo || "";
+      return '<div class="card item">' +
+        '<div class="thumb" style="' + (photo ? "background-image:url('" + esc(photo) + "')" : "") + '"></div>' +
+        '<div class="grow"><b>' + esc(titleOf(b)) + "</b>" +
+          (b.name ? '<div class="meta">' + esc(b.address) + "</div>" : "") +
+          '<div class="meta">Руфов: ' + active(roofs).filter(r => r.buildingId === b.id).length + "</div></div>" +
+        '<button class="btn danger" data-act="soft-b" data-id="' + esc(b.id) + '">В корзину</button>' +
+      "</div>";
+    }).join("") : '<div class="empty">Зданий нет</div>';
+  }
+
+  function renderRoofs() {
+    const list = active(roofs).sort((a, b) => (a.date || "9999").localeCompare(b.date || "9999"));
+    $("v-r").innerHTML = list.length ? list.map(r =>
+      '<div class="card item">' +
+        '<div class="grow"><b>' + esc(titleOf(bOf(r.buildingId))) + "</b>" +
+          '<div class="meta">' + (r.done ? "✅ Руфнули " + esc(r.doneDate || "") : (r.date ? "📅 " + esc(r.date) : "Идея, без даты")) + "</div></div>" +
+        '<button class="btn danger" data-act="soft-r" data-id="' + esc(r.id) + '">В корзину</button>' +
+      "</div>"
+    ).join("") : '<div class="empty">Руфов нет</div>';
+  }
+
+  function renderLog() {
+    const list = logs.slice().sort((a, b) => (b.at || 0) - (a.at || 0)).slice(0, 200);
+    $("v-log").innerHTML = '<div class="card log-card">' + (list.length
+      ? list.map(l => '<div class="log-item"><time>' + esc(fmt(l.at)) + "</time><div>" + (l.who ? "<b>" + esc(l.who) + ":</b> " : "") + esc(l.text) + "</div></div>").join("")
+      : '<div class="empty" style="padding:20px">Действий пока нет</div>') + "</div>";
+  }
+
+  function renderTrash() {
+    const list = trashed();
+    $("v-trash").innerHTML = list.length
+      ? '<div class="filters"><span class="meta">Удалённое хранится ' + TRASH_DAYS + " дней, потом очищается само.</span></div>" + list.map(t => {
+          const left = Math.max(0, Math.ceil((t.item.deletedAt + TRASH_DAYS * 86400000 - Date.now()) / 86400000));
+          const label = t.label.charAt(0).toUpperCase() + t.label.slice(1);
+          return '<div class="card item">' +
+            '<div class="grow"><b>' + esc(label) + "</b>" +
+              '<div class="meta">Удалено ' + esc(fmt(t.item.deletedAt)) + " · осталось " + left + " дн.</div></div>" +
+            '<div class="row" style="margin:0">' +
+              '<button class="btn ok" data-act="restore" data-col="' + t.col + '" data-id="' + esc(t.item.id) + '" data-label="' + esc(t.label) + '">Восстановить</button>' +
+              '<button class="btn danger" data-act="hard" data-col="' + t.col + '" data-id="' + esc(t.item.id) + '" data-label="' + esc(t.label) + '">Навсегда</button>' +
+            "</div></div>";
+        }).join("")
+      : '<div class="empty">Корзина пуста</div>';
+  }
+
+  function renderBackup() {
+    $("v-backup").innerHTML = '<div class="card log-card">' +
+      '<h2 style="margin:0 0 8px;font-size:18px">Резервная копия</h2>' +
+      '<div class="meta" style="font-size:14px">Скачивает все здания, руфы, отзывы и журнал одним файлом. Фото тоже входят, поэтому файл может быть большим.</div>' +
+      '<div class="row"><button class="btn primary" data-act="backup">Скачать копию (JSON)</button></div>' +
+    "</div>";
+  }
+
+  function renderAll() {
+    counts();
+    renderFeedback();
+    renderBuildings();
+    renderRoofs();
+    renderLog();
+    renderTrash();
+    renderBackup();
+  }
+
+  // ---------- данные ----------
+  function startListeners() {
+    if (started) return;
+    started = true;
+    const toList = (snap) => snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const onErr = (err) => toast("Ошибка: " + (err.code || err.message));
+    fdb.collection("feedback").onSnapshot((s) => { feedback = toList(s); renderAll(); }, onErr);
+    fdb.collection("buildings").onSnapshot((s) => { buildings = toList(s); renderAll(); purgeOld(); }, onErr);
+    fdb.collection("roofs").onSnapshot((s) => { roofs = toList(s); renderAll(); purgeOld(); }, onErr);
+    fdb.collection("log").onSnapshot((s) => { logs = toList(s); renderLog(); }, onErr);
+  }
+
+  function startDemo() {
+    demo = true;
+    const now = Date.now();
+    buildings = [
+      { id: "b1", name: "Заброшка на Кирова", address: "ул. Кирова, 7", photos: [], createdAt: 1 },
+      { id: "b2", name: "", address: "Ленинский пр., 42", photos: [], createdAt: 2 },
+      { id: "b3", name: "Старый элеватор", address: "Станционная, 3", photos: [], createdAt: 3, deletedAt: now - 2 * 86400000 }
+    ];
+    roofs = [
+      { id: "r1", buildingId: "b1", date: "2026-12-01", createdAt: 3 },
+      { id: "r2", buildingId: "b2", date: "", createdAt: 4 },
+      { id: "r3", buildingId: "b1", date: "2026-11-10", done: true, doneDate: "2026-11-10", createdAt: 5 }
+    ];
+    feedback = [
+      { id: "f1", type: "bug", author: "Матвей", text: "Кнопка удалить не нажимается на айфоне", createdAt: now - 3600e3 },
+      { id: "f2", type: "idea", author: "Vicas", text: "Добавить фото в ленту", createdAt: now - 86400e3, reply: "Сделаем на следующей неделе", status: "work" },
+      { id: "f3", type: "todo", author: "Матвей", text: "Хочу видеть погоду на дату руфа", createdAt: now - 2 * 86400e3, status: "no" }
+    ];
+    logs = [
+      { id: "l1", text: "Ответил на отзыв от «Vicas»", at: now - 86400e3 },
+      { id: "l2", text: "Удалил здание «Старый элеватор» (в корзине 7 дней)", at: now - 2 * 86400e3 }
+    ];
+    showApp();
+    renderAll();
+    toast("Демо-режим: изменения не сохраняются");
+  }
+
+  // ---------- переключение разделов ----------
+  document.querySelectorAll(".tab").forEach(tabBtn => tabBtn.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t === tabBtn));
+    ["fb", "b", "r", "log", "trash", "backup"].forEach(v => $("v-" + v).classList.toggle("hidden", v !== tabBtn.dataset.view));
+  }));
+
+  // ---------- действия ----------
+  document.addEventListener("click", async (e) => {
+    if (e.target.id === "loginBtn") return doLogin();
+    if (e.target.id === "logoutBtn") {
+      if (demo) return toast("В демо-режиме выход недоступен");
+      return auth.signOut();
+    }
+    const ff = e.target.closest("[data-ffilter]");
+    if (ff) { fbFilter = ff.dataset.ffilter; renderFeedback(); return; }
+
+    const el = e.target.closest("[data-act]");
+    if (!el) return;
+    const act = el.dataset.act, id = el.dataset.id;
+    try {
+      if (act === "fb-reply") {
+        const ta = document.querySelector('textarea[data-fid="' + id + '"]');
+        const t = ta ? ta.value.trim() : "";
+        if (!t) return toast("Напиши ответ");
+        const f = feedback.find(x => x.id === id);
+        await dbUpd("feedback", id, { reply: t, replyAt: Date.now() });
+        await log("Ответил на отзыв от «" + ((f && f.author) || "Аноним") + "»");
+        toast("Ответ сохранён");
+        return;
+      }
+      if (act === "fb-status") {
+        const f = feedback.find(x => x.id === id);
+        const st = el.dataset.st;
+        await dbUpd("feedback", id, { status: st });
+        await log("Отзыв от «" + ((f && f.author) || "Аноним") + "»: статус → " + STATUSES[st]);
+        return;
+      }
+      if (act === "soft-fb") {
+        if (!armDelete(el)) return;
+        const f = feedback.find(x => x.id === id);
+        await softDel("feedback", id, "отзыв от «" + ((f && f.author) || "Аноним") + "»");
+        return;
+      }
+      if (act === "soft-r") {
+        if (!armDelete(el)) return;
+        const r = roofs.find(x => x.id === id);
+        await softDel("roofs", id, "руф «" + titleOf(bOf(r && r.buildingId)) + "»");
+        return;
+      }
+      if (act === "soft-b") {
+        if (!armDelete(el)) return;
+        await softDel("buildings", id, "здание «" + titleOf(bOf(id)) + "» и его руфы");
+        return;
+      }
+      if (act === "restore") {
+        await restore(el.dataset.col, id, el.dataset.label);
+        toast("Восстановлено");
+        return;
+      }
+      if (act === "hard") {
+        if (!armDelete(el)) return;
+        await hardDel(el.dataset.col, id, el.dataset.label);
+        return;
+      }
+      if (act === "backup") {
+        const data = { exportedAt: new Date().toISOString(), buildings, roofs, feedback, log: logs };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        const d = new Date();
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "rufers-backup-" + d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") + ".json";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        await log("Скачал резервную копию");
+        return;
+      }
+    } catch (err) {
+      toast("Не удалось: " + (err.code || err.message));
+    }
+  });
+
+  $("pass").addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
+
+  // ---------- старт ----------
+  function init() {
+    if (SUPABASE_URL === "PASTE_HERE") { startDemo(); return; }
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    fdb = makeSupabaseDb(client);
+    auth = {
+      signInWithEmailAndPassword: async (email, pass) => {
+        const r = await client.auth.signInWithPassword({ email, password: pass });
+        if (r.error) throw r.error;
+        return r;
+      },
+      signOut: () => client.auth.signOut(),
+      onAuthStateChanged: (cb) => {
+        client.auth.getSession().then(r => cb(r.data.session ? r.data.session.user : null));
+        client.auth.onAuthStateChange((_e, sess) => cb(sess ? sess.user : null));
+      }
+    };
+    auth.onAuthStateChanged((user) => {
+      if (user && user.id === ADMIN_UID) { showApp(); startListeners(); }
+      else if (user) { auth.signOut(); showLogin("Этот аккаунт не администратор"); }
+      else showLogin("");
+    });
+  }
+  init();
+})();
+</script>
+</body>
+</html>

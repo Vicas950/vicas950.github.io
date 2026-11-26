@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Руфы">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Руфы</title>
+<style>
+  :root {
+    box-sizing: border-box;
+    --bg: #000000;
+    --text: #ffffff;
+    --muted: rgba(255,255,255,.7);
+    --glass: rgba(255,255,255,.09);
+    --glass-strong: rgba(255,255,255,.16);
+    --glass-edge: rgba(255,255,255,.38);
+    --field: rgba(255,255,255,.05);
+    --chip: rgba(255,255,255,.12);
+    --chip-edge: rgba(255,255,255,.2);
+    --panel: rgba(26,28,44,.94);
+    --toast: rgba(30,32,50,.85);
+    --dock-top: rgba(255,255,255,.12);
+    --dock-bottom: rgba(255,255,255,.04);
+    --dock-edge: rgba(255,255,255,.32);
+    --dock-shadow: 0 14px 36px rgba(0,0,0,.35);
+    --sheen: linear-gradient(120deg, rgba(255,255,255,.35), transparent 35%, transparent 65%, rgba(255,255,255,.18));
+    --ind-top: rgba(255,255,255,.42);
+    --ind-bottom: rgba(255,255,255,.16);
+    --ind-edge: rgba(255,255,255,.5);
+    --grab: rgba(255,255,255,.35);
+    --blob-op: .4;
+    --easy: #4ade80; --mid: #fbbf24; --hard: #f87171;
+    color-scheme: dark;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  :root[data-theme="light"] {
+    --bg: #cdd3e3; --text: #1a1d2e; --muted: rgba(26,29,46,.65);
+    --glass: rgba(255,255,255,.38); --glass-strong: rgba(255,255,255,.6); --glass-edge: rgba(255,255,255,.9);
+    --field: rgba(255,255,255,.5); --chip: rgba(255,255,255,.5); --chip-edge: rgba(0,0,0,.08);
+    --panel: rgba(236,239,247,.97); --toast: rgba(255,255,255,.9);
+    --dock-top: rgba(255,255,255,.5); --dock-bottom: rgba(255,255,255,.22); --dock-edge: rgba(255,255,255,.95);
+    --dock-shadow: 0 14px 36px rgba(60,70,110,.22);
+    --sheen: linear-gradient(120deg, rgba(255,255,255,.9), transparent 35%, transparent 65%, rgba(255,255,255,.45));
+    --ind-top: #ffffff; --ind-bottom: rgba(255,255,255,.6); --ind-edge: #ffffff;
+    --grab: rgba(0,0,0,.2); --blob-op: .4;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    color: var(--text); background: var(--bg); overflow: hidden; -webkit-font-smoothing: antialiased;
+  }
+  .hidden { display: none !important; }
+
+  /* ---------- фон ---------- */
+  .bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; }
+  .blob { position: absolute; border-radius: 50%; filter: blur(60px); opacity: var(--blob-op); animation: drift 14s ease-in-out infinite alternate; }
+  .b1 { width: 320px; height: 320px; background: #7c3aed; top: -80px; left: -100px; }
+  .b2 { width: 280px; height: 280px; background: #0ea5e9; top: 30%; right: -120px; animation-delay: -4s; }
+  .b3 { width: 300px; height: 300px; background: #f97316; bottom: -100px; left: 10%; animation-delay: -8s; }
+  @keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(40px,-30px) scale(1.12); } }
+
+  .app { position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column; }
+  .screens { flex: 1; position: relative; overflow: hidden; }
+  .screen {
+    position: absolute; inset: 0; overflow-y: auto;
+    padding: calc(20px + env(safe-area-inset-top, 0px)) 18px 130px;
+    opacity: 0; transform: translateY(14px) scale(.985); pointer-events: none;
+    transition: opacity .42s cubic-bezier(.2,.8,.2,1), transform .42s cubic-bezier(.2,.8,.2,1);
+  }
+  .screen.active { opacity: 1; transform: none; pointer-events: auto; }
+  .screen.leaving { opacity: 0; transform: translateX(-24px); }
+  #s-settings { display: flex; flex-direction: column; }
+
+  h1 { font-size: 30px; margin: 8px 4px 4px; letter-spacing: -.02em; }
+  .sub { color: var(--muted); margin: 0 4px 18px; font-size: 15px; }
+  .empty { text-align: center; color: var(--muted); padding: 50px 16px; font-size: 15px; animation: cardIn .5s both; }
+
+  @keyframes cardIn { from { opacity: 0; transform: translateY(16px) scale(.97); } to { opacity: 1; transform: none; } }
+
+  /* ---------- баннер напоминания ---------- */
+  .banner {
+    padding: 14px 16px; border-radius: 20px; margin: 0 0 16px;
+    background: linear-gradient(135deg, rgba(251,191,36,.25), rgba(249,115,22,.2));
+    border: 1px solid rgba(251,191,36,.5); font-size: 15px; line-height: 1.45; animation: cardIn .5s both;
+  }
+  .banner b { display: block; margin-bottom: 4px; }
+
+  /* ---------- сегмент ---------- */
+  .seg { display: flex; gap: 6px; padding: 4px; margin: 0 4px 16px; border-radius: 999px; background: var(--chip); border: 1px solid var(--chip-edge); }
+  .seg button {
+    flex: 1; font: inherit; font-size: 14px; padding: 9px; border-radius: 999px; border: 0; background: transparent; color: var(--muted); cursor: pointer; transition: background .3s, color .3s;
+  }
+  .seg button.on { background: var(--glass-strong); color: var(--text); box-shadow: inset 0 1px 0 rgba(255,255,255,.35); }
+
+  /* ---------- лента ---------- */
+  .group { margin-bottom: 24px; }
+  .gh {
+    display: inline-block; font-size: 14px; font-weight: 600; margin: 0 4px 12px; padding: 6px 12px; border-radius: 999px;
+    background: var(--glass); border: 1px solid var(--glass-edge); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  }
+  .gh.past { opacity: .55; }
+  .roof-card {
+    background: var(--glass); border: 1px solid var(--glass-edge); border-radius: 24px; overflow: hidden;
+    backdrop-filter: blur(22px) saturate(160%); -webkit-backdrop-filter: blur(22px) saturate(160%);
+    box-shadow: 0 18px 40px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.35);
+    margin-bottom: 14px; animation: cardIn .55s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .cover {
+    position: relative; height: 150px; background-size: cover; background-position: center;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cover .emoji { font-size: 60px; filter: drop-shadow(0 8px 16px rgba(0,0,0,.35)); animation: float 4s ease-in-out infinite; }
+  @keyframes float { 50% { transform: translateY(-6px); } }
+  .cover::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,.35)); }
+  .body { padding: 14px 16px 16px; }
+  .body h2 { font-size: 19px; margin: 0 0 2px; letter-spacing: -.01em; word-break: break-word; }
+  .addr { color: var(--muted); font-size: 14px; margin-bottom: 10px; word-break: break-word; }
+  .sec { color: var(--muted); font-size: 14px; line-height: 1.35; margin: 0 0 8px; white-space: pre-wrap; word-break: break-word; }
+  .sec b { color: var(--text); font-weight: 600; }
+  .foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 12px; }
+  .goers { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 10px 0 2px; }
+  .gchip { font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: var(--chip); border: 1px solid var(--chip-edge); }
+
+  .lvl {
+    display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600;
+    padding: 5px 11px; border-radius: 999px; background: var(--chip); border: 1px solid var(--chip-edge);
+  }
+  .lvl i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); box-shadow: 0 0 10px var(--c); }
+
+  .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn {
+    font: inherit; font-size: 13px; color: var(--text); cursor: pointer;
+    padding: 8px 12px; border-radius: 999px; border: 1px solid var(--glass-edge);
+    background: var(--glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    transition: transform .2s, background .2s;
+  }
+  .btn:active { transform: scale(.93); background: var(--glass-strong); }
+  .btn.danger { color: #fecaca; background: rgba(220,38,38,.28); border-color: rgba(248,113,113,.7); }
+  .btn.primary { background: #3b82f6; border-color: #60a5fa; color: #fff; }
+  .btn.sure { background: #dc2626; border-color: #f87171; color: #fff; }
+  .hint { font-size: 13px; color: var(--muted); }
+
+  /* ---------- здания ---------- */
+  .bgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .bcard {
+    position: relative; background: var(--glass); border: 1px solid var(--glass-edge); border-radius: 20px; overflow: hidden;
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    animation: cardIn .5s cubic-bezier(.2,.8,.2,1) both; transition: transform .25s cubic-bezier(.2,.8,.2,1);
+  }
+  .bcard:active { transform: scale(.97); }
+  .ph { aspect-ratio: 1 / 1; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; font-size: 42px; }
+  .cap { padding: 10px 12px 12px; font-size: 14px; line-height: 1.3; word-break: break-word; }
+  .x {
+    position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border-radius: 50%;
+    border: 0; background: rgba(220,38,38,.85); color: #fff; font-size: 16px; cursor: pointer; z-index: 2;
+  }
+  .x.edit { left: 8px; right: auto; background: rgba(0,0,0,.5); }
+
+  /* ---------- руфнули ---------- */
+  .dcard { background: var(--glass); border: 1px solid var(--glass-edge); border-radius: 22px; padding: 16px; margin-bottom: 14px; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); animation: cardIn .5s both; }
+  .dcard h2 { font-size: 18px; margin: 0 0 4px; }
+  .dcard .meta { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+  .strip { display: flex; gap: 8px; overflow-x: auto; margin-top: 10px; padding-bottom: 4px; }
+  .strip div { flex: 0 0 130px; height: 96px; border-radius: 14px; background-size: cover; background-position: center; border: 1px solid var(--glass-edge); }
+
+  /* ---------- идеи ---------- */
+  .idea {
+    display: flex; gap: 12px; align-items: center; background: var(--glass); border: 1px solid var(--glass-edge);
+    border-radius: 20px; padding: 10px; margin-bottom: 10px; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    animation: cardIn .5s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .th { width: 64px; height: 64px; border-radius: 14px; flex: 0 0 64px; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; font-size: 26px; }
+  .idea .txt { flex: 1; min-width: 0; }
+  .idea .txt b { display: block; font-size: 15px; margin-bottom: 2px; word-break: break-word; }
+  .idea .txt small { display: block; color: var(--muted); font-size: 13px; margin-bottom: 6px; word-break: break-word; }
+
+  /* ---------- настройки ---------- */
+  .set-card { background: var(--glass); border: 1px solid var(--glass-edge); border-radius: 20px; padding: 16px; margin-bottom: 14px; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); animation: cardIn .5s cubic-bezier(.2,.8,.2,1) both; }
+  .set-title { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; }
+  .seg2 { display: flex; gap: 8px; }
+  .seg2 .opt { padding: 12px 6px; font-size: 15px; }
+  .set-row { font-size: 16px; padding: 10px 0; border-bottom: 1px solid var(--glass-edge); }
+  .set-row:last-child { border-bottom: 0; }
+  .fb-item { background: var(--field); border: 1px solid var(--glass-edge); border-radius: 16px; padding: 12px; margin-bottom: 10px; }
+  .fb-head { font-size: 13px; color: var(--muted); margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .fb-text { font-size: 15px; white-space: pre-wrap; word-break: break-word; }
+  .fb-reply { margin-top: 8px; padding: 8px 10px; border-radius: 12px; background: var(--chip); font-size: 14px; word-break: break-word; }
+  .ver { margin-top: auto; text-align: center; color: var(--muted); font-size: 14px; padding: 24px 0 6px; }
+
+  /* ---------- стеклянный док ---------- */
+  .dock {
+    position: fixed; left: 16px; right: 16px; z-index: 5; max-width: 480px; margin: 0 auto;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px)); pointer-events: none;
+    animation: barIn .8s cubic-bezier(.2,.8,.2,1) both;
+  }
+  @keyframes barIn { from { transform: translateY(140%); } to { transform: none; } }
+  .tabbar {
+    position: relative; pointer-events: auto; width: 100%; height: 66px; border-radius: 34px;
+    display: grid; grid-template-columns: repeat(4, 1fr); padding: 6px;
+    background: linear-gradient(180deg, var(--dock-top), var(--dock-bottom));
+    backdrop-filter: blur(26px) saturate(190%) brightness(1.08);
+    -webkit-backdrop-filter: blur(26px) saturate(190%) brightness(1.08);
+    border: 1px solid var(--dock-edge); box-shadow: var(--dock-shadow), inset 0 1px 1px rgba(255,255,255,.55), inset 0 -1px 1px rgba(255,255,255,.12);
+    overflow: hidden;
+  }
+  .tabbar::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    background: var(--sheen); opacity: .6;
+  }
+  .indicator {
+    position: absolute; top: 6px; bottom: 6px; left: 6px; width: 80px; border-radius: 28px;
+    background: linear-gradient(180deg, var(--ind-top), var(--ind-bottom)); border: 1px solid var(--ind-edge);
+    box-shadow: 0 6px 18px rgba(0,0,0,.25), inset 0 1px 1px rgba(255,255,255,.7);
+    transition: transform .55s cubic-bezier(.34,1.45,.5,1), width .55s cubic-bezier(.34,1.45,.5,1);
+  }
+  .indicator::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(circle at 30% 20%, rgba(255,255,255,.5), transparent 60%); }
+  .tab {
+    position: relative; z-index: 1; background: none; border: 0; color: var(--muted);
+    font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    border-radius: 28px; transition: color .3s, transform .2s; -webkit-tap-highlight-color: transparent;
+  }
+  .tab svg { width: 24px; height: 24px; transition: transform .45s cubic-bezier(.34,1.56,.64,1); }
+  .tab.active { color: var(--text); }
+  .tab.active svg { transform: translateY(-2px) scale(1.12); }
+  .tab:active { transform: scale(.92); }
+
+  .plus {
+    pointer-events: auto; position: absolute; right: 0; bottom: calc(100% + 12px); width: 66px; height: 66px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.4); color: #fff; font-size: 34px; font-weight: 300; line-height: 1; cursor: pointer;
+    background: linear-gradient(180deg, rgba(96,165,250,.9), rgba(37,99,235,.85));
+    backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%);
+    box-shadow: 0 14px 30px rgba(37,99,235,.45), inset 0 1px 1px rgba(255,255,255,.6);
+    display: flex; align-items: center; justify-content: center; padding-bottom: 4px;
+    transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .3s ease;
+  }
+  .plus:active { transform: scale(.88) rotate(45deg); }
+  .plus.hide { opacity: 0; transform: scale(.6); pointer-events: none; }
+  #pBuilding.simple .full { display: none; }
+  #pRoof.nodate .dfield { display: none; }
+
+  /* ---------- шторки ---------- */
+  .overlay {
+    position: fixed; inset: 0; z-index: 10; background: rgba(0,0,0,.45);
+    display: flex; align-items: flex-end; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity .3s ease;
+  }
+  .overlay.show { opacity: 1; pointer-events: auto; }
+  .panel {
+    display: none; width: 100%; max-width: 560px; max-height: 88vh; overflow-y: auto;
+    background: var(--panel); backdrop-filter: blur(30px) saturate(180%); -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid var(--glass-edge); border-bottom: 0; border-radius: 28px 28px 0 0;
+    padding: 12px 18px calc(20px + env(safe-area-inset-bottom, 0px));
+  }
+  .panel.cur { display: block; animation: sheetUp .45s cubic-bezier(.2,.8,.2,1); }
+  @keyframes sheetUp { from { transform: translateY(100%); } to { transform: none; } }
+  .grab { width: 40px; height: 5px; border-radius: 3px; background: var(--grab); margin: 0 auto 12px; }
+  .panel h2 { font-size: 20px; margin: 4px 0 14px; }
+  label.f { display: block; font-size: 13px; color: var(--muted); margin: 14px 0 6px; }
+  input[type=text], input[type=date], textarea {
+    width: 100%; padding: 12px; border-radius: 14px; border: 1px solid var(--glass-edge);
+    background: var(--field); color: var(--text); font: inherit; font-size: 16px; outline: none;
+  }
+  input[type=date] { color-scheme: inherit; }
+  textarea { min-height: 64px; resize: vertical; }
+  .lvls { display: flex; gap: 8px; }
+  .opt {
+    flex: 1; font: inherit; font-size: 14px; color: var(--text); padding: 10px 6px; border-radius: 14px; cursor: pointer;
+    border: 1px solid var(--glass-edge); background: var(--field); transition: transform .2s, background .3s;
+  }
+  .opt:active { transform: scale(.95); }
+  .opt.on { background: var(--glass-strong); box-shadow: inset 0 1px 0 rgba(255,255,255,.4); font-weight: 600; }
+  .pgrid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .pthumb { position: relative; width: 84px; height: 84px; border-radius: 14px; background-size: cover; background-position: center; border: 1px solid var(--glass-edge); }
+  .px {
+    position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%; border: 0; padding: 0;
+    background: rgba(0,0,0,.6); color: #fff; font-size: 14px; line-height: 22px; cursor: pointer;
+  }
+  .addtile {
+    position: relative; width: 84px; height: 84px; border-radius: 14px; border: 1px dashed var(--glass-edge);
+    background: var(--field); display: flex; align-items: center; justify-content: center; text-align: center;
+    color: var(--muted); font-size: 13px; overflow: hidden;
+  }
+  .pinput { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2; font-size: 16px; }
+  .pickrow {
+    display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 16px; cursor: pointer; margin-bottom: 8px;
+    background: var(--glass); border: 1px solid var(--glass-edge); transition: transform .2s; font: inherit; color: var(--text); width: 100%; text-align: left;
+  }
+  .pickrow:active { transform: scale(.97); }
+  .pickrow .th { width: 52px; height: 52px; flex: 0 0 52px; border-radius: 12px; }
+  .row2 { display: flex; gap: 10px; margin-top: 18px; }
+  .row2 .btn { flex: 1; padding: 13px; font-size: 15px; text-align: center; }
+
+  .toast {
+    position: fixed; top: calc(14px + env(safe-area-inset-top, 0px)); left: 50%; z-index: 20;
+    transform: translate(-50%, -160%); transition: transform .4s cubic-bezier(.34,1.4,.5,1);
+    padding: 10px 18px; border-radius: 999px; font-size: 14px; white-space: nowrap; max-width: 90vw; overflow: hidden; text-overflow: ellipsis;
+    background: var(--toast); border: 1px solid var(--glass-edge); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  }
+  .toast.show { transform: translate(-50%, 0); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+</div>
+
+<div class="app">
+  <div class="screens">
+
+    <section class="screen active" id="s-home">
+      <h1>Главная</h1>
+      <p class="sub">Ближайшие руфы сверху</p>
+      <div id="banner" class="banner hidden"></div>
+      <div id="feed"></div>
+    </section>
+
+    <section class="screen" id="s-buildings">
+      <h1>Здания</h1>
+      <p class="sub">Все здания посёлка и сделанные руфы</p>
+      <div class="seg">
+        <button class="on" data-bseg="b">Здания</button>
+        <button data-bseg="done">Руфнули</button>
+      </div>
+      <div class="bgrid" id="bgrid"></div>
+      <div id="doneList" class="hidden"></div>
+    </section>
+
+    <section class="screen" id="s-ideas">
+      <h1>Идеи</h1>
+      <p class="sub">Хотим руфнуть, дату пока не назначили</p>
+      <div id="ideas"></div>
+    </section>
+
+    <section class="screen" id="s-settings">
+      <h1>Настройки</h1>
+      <p class="sub">Оформление и информация</p>
+
+      <div class="set-card">
+        <div class="set-title">Твоё имя</div>
+        <input type="text" id="pName" placeholder="Как тебя видят другие">
+      </div>
+
+      <div class="set-card">
+        <div class="set-title">Тема</div>
+        <div class="seg2">
+          <button class="opt" data-theme-pick="light">☀️ Светлая</button>
+          <button class="opt" data-theme-pick="dark">🌙 Тёмная</button>
+        </div>
+      </div>
+
+      <div class="set-card">
+        <div class="set-title">Создатели</div>
+        <div class="set-row">Vicas (Ваня Глухих)</div>
+        <div class="set-row">Великий Claude</div>
+      </div>
+
+      <div class="set-card">
+        <div class="set-title">Обратная связь</div>
+        <div class="seg2" id="fbType">
+          <button class="opt on" data-fbtype="bug">🐞 Баг</button>
+          <button class="opt" data-fbtype="todo">🛠 Недоделка</button>
+          <button class="opt" data-fbtype="idea">💡 Идея</button>
+        </div>
+        <label class="f" for="fbText">Что поправить или добавить</label>
+        <textarea id="fbText" placeholder="Опиши как можно подробнее"></textarea>
+        <div class="row2"><button class="btn primary" data-act="send-fb">Отправить</button></div>
+        <div class="set-title" style="margin-top:22px">Сообщения</div>
+        <div id="fbList"></div>
+      </div>
+
+      <div class="ver">Версия 1.0.8</div>
+    </section>
+  </div>
+
+  <div class="dock">
+    <nav class="tabbar" id="tabbar" aria-label="Вкладки">
+      <div class="indicator" id="indicator"></div>
+      <button class="tab active" data-target="s-home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/></svg>
+        Главная
+      </button>
+      <button class="tab" data-target="s-buildings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="7" height="12" rx="1"/><rect x="13" y="4" width="7" height="17" rx="1"/><path d="M7 13h1M7 16h1M16 8h1M16 11h1M16 14h1"/></svg>
+        Здания
+      </button>
+      <button class="tab" data-target="s-ideas">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>
+        Идеи
+      </button>
+      <button class="tab" data-target="s-settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        Настройки
+      </button>
+    </nav>
+    <button class="plus" id="plusBtn" aria-label="Добавить">+</button>
+  </div>
+</div>
+
+<!-- выбор здания (из «+») -->
+<div class="overlay" id="overlay">
+  <div class="panel" id="pPick">
+    <div class="grab"></div>
+    <h2>Какой руф добавить?</h2>
+    <div id="pickList"></div>
+    <button class="btn primary" style="width:100%;padding:13px;font-size:15px;margin-top:6px" data-act="new-building">＋ Добавить новое здание</button>
+  </div>
+
+  <!-- здание: полная или короткая форма -->
+  <div class="panel" id="pBuilding">
+    <div class="grab"></div>
+    <h2 id="bTitle">Новое здание</h2>
+    <label class="f">Фото (до 4)</label>
+    <div class="pgrid" id="bGrid"></div>
+    <div class="addtile" id="bAddTile" style="margin-top:8px">
+      <span>📷 Добавить</span>
+      <input type="file" id="bPhoto" class="pinput" accept="image/*" multiple>
+    </div>
+    <label class="f" for="bName">Название</label>
+    <input type="text" id="bName" placeholder="Например: Заброшка на Кирова">
+    <label class="f" for="bAddr">Адрес</label>
+    <input type="text" id="bAddr" placeholder="Например: ул. Кирова, 7">
+    <label class="f full" for="bSec">Защита</label>
+    <textarea class="full" id="bSec" placeholder="Домофон, консьерж, камеры, охрана..."></textarea>
+    <label class="f full" for="bTake">Что взять с собой</label>
+    <textarea class="full" id="bTake" placeholder="Страховка, фонарик, перчатки..."></textarea>
+    <label class="f full">Уровень</label>
+    <div class="lvls full" id="bLvls">
+      <button class="opt" data-lvl="easy">Легко</button>
+      <button class="opt" data-lvl="mid">Средне</button>
+      <button class="opt" data-lvl="hard">Сложно</button>
+    </div>
+    <label class="f full" for="bNote">Заметки</label>
+    <textarea class="full" id="bNote" placeholder="Вход, высота, что важно знать..."></textarea>
+    <div class="row2">
+      <button class="btn" data-act="close">Отмена</button>
+      <button class="btn primary" data-act="save-building">Сохранить</button>
+    </div>
+  </div>
+
+  <!-- дата руфа -->
+  <div class="panel" id="pRoof">
+    <div class="grab"></div>
+    <h2 id="rTitle">Руф</h2>
+    <label class="f dfield" for="rDate">Дата руфа</label>
+    <input type="date" id="rDate" class="dfield">
+    <div class="hint dfield" style="margin-top:6px">Без даты руф попадёт во вкладку «Идеи»</div>
+    <div class="row2">
+      <button class="btn" data-act="close">Отмена</button>
+      <button class="btn primary" data-act="save-roof">Сохранить</button>
+    </div>
+  </div>
+
+  <!-- руф сделан: дата, фото-отчёт, заметка -->
+  <div class="panel" id="pDone">
+    <div class="grab"></div>
+    <h2 id="dTitle">Руфнули</h2>
+    <label class="f" for="dDate">Дата</label>
+    <input type="date" id="dDate">
+    <label class="f">Фото-отчёт (до 4)</label>
+    <div class="pgrid" id="dGrid"></div>
+    <div class="addtile" id="dAddTile" style="margin-top:8px">
+      <span>📷 Добавить</span>
+      <input type="file" id="dPhoto" class="pinput" accept="image/*" multiple>
+    </div>
+    <label class="f" for="dNote">Заметка</label>
+    <textarea id="dNote" placeholder="Как прошло, что важно знать"></textarea>
+    <div class="row2">
+      <button class="btn" data-act="close">Отмена</button>
+      <button class="btn primary" data-act="save-done">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Supabase: база и вход -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+
+<script>
+(function () {
+  /* ============================================================
+     База: Supabase. Publishable-ключ публичный, его можно держать в коде.
+     ============================================================ */
+  const SUPABASE_URL = "https://dgxkkxkynowjxbbpwqhd.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_kgvEJe5LEfb42i5iDqZ0dg_1-SocVD3";
+  // ID администратора (см. подсказку внизу Настроек)
+  const ADMIN_ID = "PASTE_HERE";
+
+  const LEVELS = {
+    easy: { label: "Легко", color: "var(--easy)" },
+    mid:  { label: "Средне", color: "var(--mid)" },
+    hard: { label: "Сложно", color: "var(--hard)" }
+  };
+  const FB_TYPES = { bug: "🐞 Баг", todo: "🛠 Недоделка", idea: "💡 Идея" };
+  const PALETTE = [
+    "linear-gradient(135deg,#1e3a8a,#7c3aed 60%,#db2777)",
+    "linear-gradient(135deg,#365314,#166534 55%,#0f172a)",
+    "linear-gradient(135deg,#7f1d1d,#ea580c 55%,#facc15)",
+    "linear-gradient(135deg,#0c4a6e,#0ea5e9 60%,#a5f3fc)",
+    "linear-gradient(135deg,#3f3f46,#18181b 60%,#71717a)"
+  ];
+  const MAX_PHOTOS = 4;
+
+  let db = null;
+  let buildings = [], roofs = [], feedback = [];
+  let myId = "";
+  let bLevel = "", bPhotos = [], dPhotos = [];
+  let editBId = "", editRoofId = "", roofBid = "", doneRoofId = "";
+  let flowNoDate = false, simpleMode = false, roofNoDate = false;
+  let fbType = "bug";
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  const isAdmin = () => !!myId && myId === ADMIN_ID;
+  // Владелец записи — тот, кто её создал. Админ может всё. Старые записи без владельца — доступны всем.
+  function mine(item) {
+    if (isAdmin()) return true;
+    const o = item.ownerId || item.authorId;
+    return !o || o === myId;
+  }
+  const myName = () => { try { return localStorage.getItem("rufers-name") || "Аноним"; } catch (e) { return "Аноним"; } };
+
+  function gradFor(str) {
+    let h = 0;
+    for (const ch of String(str)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    return PALETTE[h % PALETTE.length];
+  }
+  function photosOf(b) {
+    if (!b) return [];
+    if (b.photos && b.photos.length) return b.photos;
+    return b.photo ? [b.photo] : [];
+  }
+  function coverStyle(b) {
+    const c = photosOf(b)[0];
+    if (c) return "background-image:url('" + esc(c) + "')";
+    return "background:" + gradFor(b ? b.address : "");
+  }
+  function titleOf(b) { return b ? (b.name || b.address) : "Здание удалено"; }
+  function bOf(id) { return buildings.find(b => b.id === id); }
+  function pad(n) { return String(n).padStart(2, "0"); }
+  function ymd(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function todayStr() { return ymd(new Date()); }
+  function tomorrowStr() { const d = new Date(); d.setDate(d.getDate() + 1); return ymd(d); }
+
+  function dayLabel(s) {
+    const t = new Date(todayStr() + "T00:00:00");
+    const d = new Date(s + "T00:00:00");
+    const diff = Math.round((d - t) / 86400000);
+    if (diff === 0) return "Сегодня";
+    if (diff === 1) return "Завтра";
+    if (diff === -1) return "Вчера";
+    const txt = d.toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" });
+    return txt.charAt(0).toUpperCase() + txt.slice(1);
+  }
+  function fmtShort(s) {
+    if (!s) return "";
+    const d = new Date(s + "T00:00:00");
+    return isNaN(d) ? esc(s) : d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
+  }
+
+  function toast(msg) {
+    const t = $("toast");
+    t.textContent = msg; t.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => t.classList.remove("show"), 2600);
+  }
+
+  function lvlChip(level) {
+    if (!LEVELS[level]) return "";
+    return '<span class="lvl" style="--c:' + LEVELS[level].color + '"><i></i>' + LEVELS[level].label + "</span>";
+  }
+  function textBlock(label, text) {
+    if (!text) return "";
+    return '<p class="sec"><b>' + esc(label) + ":</b> " + esc(text) + "</p>";
+  }
+
+  // Двойное нажатие вместо confirm(): системное окно может быть заблокировано
+  function armDelete(el) {
+    if (el.dataset.armed === "1") { el.dataset.armed = ""; return true; }
+    el.dataset.armed = "1";
+    if (!el.dataset.label) el.dataset.label = el.textContent;
+    el.textContent = "Точно?";
+    el.classList.add("sure");
+    setTimeout(() => {
+      if (el.dataset.armed === "1") {
+        el.dataset.armed = "";
+        el.textContent = el.dataset.label;
+        el.classList.remove("sure");
+      }
+    }, 3000);
+    return false;
+  }
+
+  // ---------- фото: сжатие, чтобы влезало в базу ----------
+  function readPhoto(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = reject;
+        img.onload = () => {
+          const max = 800;
+          const k = Math.min(1, max / Math.max(img.width, img.height));
+          const c = document.createElement("canvas");
+          c.width = Math.round(img.width * k);
+          c.height = Math.round(img.height * k);
+          c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+          let out = "";
+          for (const q of [0.8, 0.7, 0.6, 0.5, 0.4]) {
+            out = c.toDataURL("image/jpeg", q);
+            if (out.length < 110000) break;
+          }
+          resolve(out);
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  async function readPhotos(files, room) {
+    const out = [];
+    for (const f of Array.from(files).slice(0, room)) {
+      try { out.push(await readPhoto(f)); } catch (e) { toast("Одно фото не прочиталось"); }
+    }
+    return out;
+  }
+
+  // ---------- рендер ----------
+  function renderBanner() {
+    const t = todayStr(), tm = tomorrowStr();
+    const soon = roofs.filter(r => !r.done && (r.date === t || r.date === tm));
+    if (!soon.length) { $("banner").classList.add("hidden"); return; }
+    $("banner").classList.remove("hidden");
+    $("banner").innerHTML = soon.slice(0, 4).map(r =>
+      "<b>" + (r.date === t ? "Сегодня" : "Завтра") + ": " + esc(titleOf(bOf(r.buildingId))) + "</b>"
+    ).join("");
+  }
+
+  function goersHTML(r) {
+    const list = r.goers || [];
+    const iGo = list.some(g => g.id === myId);
+    return '<div class="goers">' +
+      list.map(g => '<span class="gchip">' + esc(g.name) + "</span>").join("") +
+      '<button class="btn" data-act="go" data-id="' + esc(r.id) + '">' + (iGo ? "Я не иду" : "Я иду") + "</button>" +
+    "</div>";
+  }
+
+  function renderFeed() {
+    const list = roofs
+      .filter(r => r.date && !r.done)
+      .sort((a, b) => a.date.localeCompare(b.date) || (a.createdAt || 0) - (b.createdAt || 0));
+    const today = todayStr();
+    if (!list.length) {
+      $("feed").innerHTML = '<div class="empty">Пока нет руфов с датой.<br>Нажми «+», чтобы добавить.</div>';
+      return;
+    }
+    const groups = new Map();
+    list.forEach(r => {
+      if (!groups.has(r.date)) groups.set(r.date, []);
+      groups.get(r.date).push(r);
+    });
+    let html = "";
+    let gi = 0;
+    groups.forEach((items, date) => {
+      const past = date < today;
+      html += '<div class="group" style="animation: cardIn .5s ' + (gi * 80) + 'ms both">' +
+        '<div class="gh' + (past ? " past" : "") + '">' + esc(dayLabel(date)) + "</div>";
+      items.forEach((r, i) => {
+        const b = bOf(r.buildingId);
+        const own = mine(r);
+        html += '<article class="roof-card" style="animation-delay:' + (gi * 80 + i * 60) + 'ms;' + (past ? "opacity:.6" : "") + '">' +
+          '<div class="cover" style="' + coverStyle(b) + '">' + (photosOf(b).length ? "" : '<span class="emoji">🏢</span>') + "</div>" +
+          '<div class="body">' +
+            "<h2>" + esc(titleOf(b)) + "</h2>" +
+            (b && b.name ? '<div class="addr">' + esc(b.address) + "</div>" : '<div style="height:8px"></div>') +
+            '<div style="margin-bottom:10px">' + lvlChip(b && b.level) + "</div>" +
+            textBlock("Защита", b && b.security) +
+            textBlock("Взять с собой", b && b.take) +
+            textBlock("Заметки", b && b.note) +
+            goersHTML(r) +
+            '<div class="foot"><div class="acts">' +
+              (own
+                ? '<button class="btn" data-act="roof-edit" data-id="' + esc(r.id) + '">Изменить дату</button>'
+                : "") +
+              '<button class="btn primary" data-act="done-open" data-id="' + esc(r.id) + '">Руфнули ✓</button>' +
+              (own ? '<button class="btn danger" data-act="roof-del" data-id="' + esc(r.id) + '">Удалить</button>' : "") +
+            "</div></div>" +
+          "</div></article>";
+      });
+      html += "</div>";
+      gi++;
+    });
+    $("feed").innerHTML = html;
+  }
+
+  function renderBuildings() {
+    const list = buildings.slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    if (!list.length) {
+      $("bgrid").innerHTML = '<div class="empty" style="grid-column:1/-1">Зданий пока нет.<br>Добавь через «+».</div>';
+      return;
+    }
+    $("bgrid").innerHTML = list.map((b, i) => {
+      const own = mine(b);
+      return '<div class="bcard" style="animation-delay:' + (i * 50) + 'ms">' +
+        (own ? '<button class="x edit" data-act="b-edit" data-id="' + esc(b.id) + '" aria-label="Изменить">✎</button>' : "") +
+        (isAdmin() ? '<button class="x" data-act="b-del" data-id="' + esc(b.id) + '" aria-label="Удалить">×</button>' : "") +
+        '<div class="ph" style="' + coverStyle(b) + '">' + (photosOf(b).length ? "" : "🏢") + "</div>" +
+        '<div class="cap">' + esc(b.address) + "</div>" +
+      "</div>";
+    }).join("");
+  }
+
+  function renderDone() {
+    const list = roofs.filter(r => r.done).sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
+    if (!list.length) {
+      $("doneList").innerHTML = '<div class="empty">Пока ни одного руфа не отмечено сделанным.</div>';
+      return;
+    }
+    $("doneList").innerHTML = list.map((r, i) => {
+      const b = bOf(r.buildingId);
+      const photos = r.reportPhotos || [];
+      return '<div class="dcard" style="animation-delay:' + (i * 60) + 'ms">' +
+        "<h2>" + esc(titleOf(b)) + "</h2>" +
+        '<div class="meta">Руфнули · ' + fmtShort(r.doneDate || r.date) + "</div>" +
+        (r.reportNote ? '<p class="sec">' + esc(r.reportNote) + "</p>" : "") +
+        (photos.length
+          ? '<div class="strip">' + photos.map(p => "<div style=\"background-image:url('" + esc(p) + "')\"></div>").join("") + "</div>"
+          : "") +
+        '<div class="foot"><span class="hint">' + (r.goers && r.goers.length ? "Были: " + r.goers.map(g => esc(g.name)).join(", ") : "") + "</span>" +
+          (mine(r) ? '<button class="btn danger" data-act="roof-del" data-id="' + esc(r.id) + '">Удалить</button>' : "") +
+        "</div></div>";
+    }).join("");
+  }
+
+  function renderIdeas() {
+    const list = roofs
+      .filter(r => !r.date && !r.done)
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    if (!list.length) {
+      $("ideas").innerHTML = '<div class="empty">Идей пока нет.<br>Руфы без даты появятся здесь.</div>';
+      return;
+    }
+    $("ideas").innerHTML = list.map((r, i) => {
+      const b = bOf(r.buildingId);
+      const own = mine(r);
+      return '<div class="idea" style="animation-delay:' + (i * 60) + 'ms">' +
+        '<div class="th" style="' + coverStyle(b) + '">' + (photosOf(b).length ? "" : "🏢") + "</div>" +
+        '<div class="txt"><b>' + esc(titleOf(b)) + "</b>" +
+          (b && b.name ? "<small>" + esc(b.address) + "</small>" : "") +
+          '<div class="acts">' +
+            lvlChip(b && b.level) +
+            (own ? '<button class="btn" data-act="roof-edit" data-id="' + esc(r.id) + '">Назначить дату</button>' : "") +
+            '<button class="btn primary" data-act="done-open" data-id="' + esc(r.id) + '">Руфнули ✓</button>' +
+            (own ? '<button class="btn danger" data-act="roof-del" data-id="' + esc(r.id) + '">×</button>' : "") +
+          "</div></div></div>";
+    }).join("");
+  }
+
+  function renderFeedback() {
+    const list = feedback
+      .filter(f => isAdmin() || f.authorId === myId)
+      .slice()
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    if (!list.length) {
+      $("fbList").innerHTML = '<div class="hint">Сообщений пока нет</div>';
+      return;
+    }
+    $("fbList").innerHTML = list.map(f =>
+      '<div class="fb-item">' +
+        '<div class="fb-head"><span>' + esc(FB_TYPES[f.type] || "") + " · " + esc(f.author || "Аноним") + " · " +
+          esc(new Date(f.createdAt || 0).toLocaleDateString("ru-RU", { day: "numeric", month: "short" })) + "</span>" +
+          (mine(f) ? '<button class="btn danger" style="padding:4px 10px" data-act="fb-del" data-id="' + esc(f.id) + '">×</button>' : "") +
+        "</div>" +
+        '<div class="fb-text">' + esc(f.text) + "</div>" +
+        (f.reply ? '<div class="fb-reply"><b>Ответ:</b> ' + esc(f.reply) + "</div>" : "") +
+      "</div>"
+    ).join("");
+  }
+
+  function renderAll() {
+    renderBanner();
+    renderFeed();
+    renderBuildings();
+    renderDone();
+    renderIdeas();
+  }
+
+  // ---------- шторки ----------
+  function showPanel(id) {
+    document.querySelectorAll(".panel").forEach(p => p.classList.toggle("cur", p.id === id));
+    $("overlay").classList.add("show");
+  }
+  function closeSheet() { $("overlay").classList.remove("show"); }
+
+  function openPick() {
+    if (!buildings.length) {
+      $("pickList").innerHTML = '<div class="hint" style="margin:6px 0 12px">Зданий пока нет. Добавь первое ниже.</div>';
+    } else {
+      $("pickList").innerHTML = buildings
+        .slice().sort((a, b) => titleOf(a).localeCompare(titleOf(b)))
+        .map(b => '<button class="pickrow" data-act="pick-building" data-id="' + esc(b.id) + '">' +
+          '<div class="th" style="' + coverStyle(b) + '">' + (photosOf(b).length ? "" : "🏢") + "</div>" +
+          "<span>" + esc(titleOf(b)) + "</span></button>").join("");
+    }
+    showPanel("pPick");
+  }
+
+  function renderBPhotos() {
+    $("bGrid").innerHTML = bPhotos.map((p, i) =>
+      '<div class="pthumb" style="background-image:url(\'' + esc(p) + '\')">' +
+        '<button class="px" data-act="bp-rm" data-i="' + i + '">×</button></div>').join("");
+    $("bAddTile").classList.toggle("hidden", bPhotos.length >= MAX_PHOTOS);
+  }
+  function renderDPhotos() {
+    $("dGrid").innerHTML = dPhotos.map((p, i) =>
+      '<div class="pthumb" style="background-image:url(\'' + esc(p) + '\')">' +
+        '<button class="px" data-act="dp-rm" data-i="' + i + '">×</button></div>').join("");
+    $("dAddTile").classList.toggle("hidden", dPhotos.length >= MAX_PHOTOS);
+  }
+
+  function setBLevel(l) {
+    bLevel = l;
+    document.querySelectorAll("#bLvls .opt").forEach(b => b.classList.toggle("on", b.dataset.lvl === l));
+  }
+
+  function openBuildingForm(editId, simple) {
+    editBId = editId || "";
+    simpleMode = !!simple && !editBId;
+    $("pBuilding").classList.toggle("simple", simpleMode);
+    const b = editBId ? bOf(editBId) : null;
+    $("bTitle").textContent = b ? "Изменить здание" : "Новое здание";
+    bPhotos = b ? photosOf(b).slice() : [];
+    $("bName").value = b ? (b.name || "") : "";
+    $("bAddr").value = b ? (b.address || "") : "";
+    $("bSec").value = b ? (b.security || "") : "";
+    $("bTake").value = b ? (b.take || "") : "";
+    $("bNote").value = b ? (b.note || "") : "";
+    $("bPhoto").value = "";
+    setBLevel(b ? (b.level || "") : "");
+    renderBPhotos();
+    showPanel("pBuilding");
+    setTimeout(() => $("bName").focus(), 300);
+  }
+
+  function openRoof(bid, roofId, noDate) {
+    const r = roofId ? roofs.find(x => x.id === roofId) : null;
+    roofBid = r ? r.buildingId : bid;
+    editRoofId = r ? r.id : "";
+    roofNoDate = !!noDate && !r;
+    $("pRoof").classList.toggle("nodate", roofNoDate);
+    $("rTitle").textContent = titleOf(bOf(roofBid)) || "Руф";
+    $("rDate").value = r && r.date ? r.date : "";
+    showPanel("pRoof");
+  }
+
+  function openDone(roofId) {
+    const r = roofs.find(x => x.id === roofId);
+    if (!r) return;
+    doneRoofId = roofId;
+    dPhotos = (r.reportPhotos || []).slice();
+    $("dTitle").textContent = titleOf(bOf(r.buildingId));
+    $("dDate").value = r.date || todayStr();
+    $("dNote").value = r.reportNote || "";
+    $("dPhoto").value = "";
+    renderDPhotos();
+    showPanel("pDone");
+  }
+
+  // ---------- сегмент «Здания / Руфнули» ----------
+  function setBSeg(v) {
+    document.querySelectorAll("[data-bseg]").forEach(b => b.classList.toggle("on", b.dataset.bseg === v));
+    $("bgrid").classList.toggle("hidden", v !== "b");
+    $("doneList").classList.toggle("hidden", v !== "done");
+  }
+  document.querySelectorAll("[data-bseg]").forEach(b => b.addEventListener("click", () => setBSeg(b.dataset.bseg)));
+
+  // ---------- фото в формах ----------
+  $("bPhoto").addEventListener("change", async (e) => {
+    const room = MAX_PHOTOS - bPhotos.length;
+    if (room <= 0) return;
+    bPhotos = bPhotos.concat(await readPhotos(e.target.files, room));
+    e.target.value = "";
+    renderBPhotos();
+  });
+  $("dPhoto").addEventListener("change", async (e) => {
+    const room = MAX_PHOTOS - dPhotos.length;
+    if (room <= 0) return;
+    dPhotos = dPhotos.concat(await readPhotos(e.target.files, room));
+    e.target.value = "";
+    renderDPhotos();
+  });
+
+  $("bLvls").addEventListener("click", (e) => {
+    const b = e.target.closest(".opt");
+    if (b) setBLevel(bLevel === b.dataset.lvl ? "" : b.dataset.lvl);
+  });
+
+  $("overlay").addEventListener("click", (e) => { if (e.target === $("overlay")) closeSheet(); });
+
+  // ---------- «+» зависит от вкладки ----------
+  $("plusBtn").addEventListener("click", () => {
+    const tab = document.querySelector(".screen.active").id;
+    if (tab === "s-settings") return;
+    if (tab === "s-buildings") return openBuildingForm(null, true);
+    flowNoDate = tab === "s-ideas";
+    openPick();
+  });
+
+  // ---------- действия ----------
+  document.addEventListener("click", async (e) => {
+    const el = e.target.closest("[data-act]");
+    if (!el) return;
+    if (!db) { toast("База ещё не подключена"); return; }
+    const act = el.dataset.act;
+    const id = el.dataset.id;
+    try {
+      if (act === "close") return closeSheet();
+      if (act === "new-building") return openBuildingForm(null, false);
+      if (act === "pick-building") return openRoof(id, null, flowNoDate);
+      if (act === "roof-edit") {
+        const rr = roofs.find(x => x.id === id);
+        if (rr && !mine(rr)) return toast("Можно менять только свои руфы");
+        return openRoof(null, id);
+      }
+      if (act === "done-open") return openDone(id);
+      if (act === "b-edit") {
+        const bb = bOf(id);
+        if (bb && !mine(bb)) return toast("Можно менять только свои здания");
+        return openBuildingForm(id, false);
+      }
+      if (act === "bp-rm") { bPhotos.splice(Number(el.dataset.i), 1); return renderBPhotos(); }
+      if (act === "dp-rm") { dPhotos.splice(Number(el.dataset.i), 1); return renderDPhotos(); }
+
+      if (act === "go") {
+        const r = roofs.find(x => x.id === id);
+        if (!r) return;
+        const list = r.goers || [];
+        const has = list.some(g => g.id === myId);
+        const next = has ? list.filter(g => g.id !== myId) : list.concat([{ id: myId, name: myName() }]);
+        await db.collection("roofs").doc(id).update({ goers: next });
+        logAct((has ? "Отказался от руфа «" : "Пойдёт на руф «") + titleOf(bOf(r.buildingId)) + "»");
+        return;
+      }
+
+      if (act === "save-building") {
+        const address = $("bAddr").value.trim();
+        if (!address) { $("bAddr").focus(); return toast("Укажи адрес"); }
+        if (editBId) {
+          const eb = bOf(editBId);
+          if (eb && !mine(eb)) return toast("Можно менять только свои здания");
+        }
+        const data = {
+          name: $("bName").value.trim(),
+          address,
+          photos: bPhotos.slice(),
+          photo: "",
+          security: simpleMode ? "" : $("bSec").value.trim(),
+          take: simpleMode ? "" : $("bTake").value.trim(),
+          level: simpleMode ? "" : (bLevel || ""),
+          note: simpleMode ? "" : $("bNote").value.trim(),
+          createdAt: Date.now(),
+          ownerId: myId
+        };
+        if (editBId) {
+          const { createdAt, ...upd } = data;
+          await db.collection("buildings").doc(editBId).update(upd);
+          logAct("Изменил здание «" + (upd.name || upd.address) + "»");
+          closeSheet();
+          toast("Здание обновлено");
+        } else {
+          const ref = await db.collection("buildings").add(data);
+          logAct("Добавил здание «" + (data.name || data.address) + "»");
+          closeSheet();
+          if (simpleMode) {
+            toast("Здание добавлено");
+          } else {
+            setTimeout(() => openRoof(ref.id, null, flowNoDate), 350);
+            toast("Здание добавлено");
+          }
+        }
+        return;
+      }
+
+      if (act === "save-roof") {
+        const date = roofNoDate ? "" : ($("rDate").value || "");
+        const data = { buildingId: roofBid, date, updatedAt: Date.now() };
+        if (editRoofId) {
+          const er = roofs.find(x => x.id === editRoofId);
+          if (er && !mine(er)) { closeSheet(); return toast("Можно менять только свои руфы"); }
+          await db.collection("roofs").doc(editRoofId).update(data);
+          logAct("Изменил руф «" + titleOf(bOf(roofBid)) + "»: " + (date ? "дата " + date : "без даты"));
+        } else {
+          data.createdAt = Date.now();
+          data.ownerId = myId;
+          data.goers = [];
+          await db.collection("roofs").add(data);
+          logAct("Добавил руф «" + titleOf(bOf(roofBid)) + "»" + (date ? " на " + date : " в идеи"));
+        }
+        closeSheet();
+        setTab(date ? "s-home" : "s-ideas");
+        toast(date ? "Добавлено в ленту" : "Добавлено в идеи");
+        return;
+      }
+
+      if (act === "save-done") {
+        const r = roofs.find(x => x.id === doneRoofId);
+        if (!r) return closeSheet();
+        const date = $("dDate").value || todayStr();
+        await db.collection("roofs").doc(doneRoofId).update({
+          done: true,
+          doneDate: date,
+          doneAt: Date.now(),
+          reportPhotos: dPhotos.slice(),
+          reportNote: $("dNote").value.trim()
+        });
+        logAct("Отметил руф «" + titleOf(bOf(r.buildingId)) + "» как сделанный (" + date + ")");
+        closeSheet();
+        setTab("s-buildings");
+        setBSeg("done");
+        toast("Отмечено как сделанное");
+        return;
+      }
+
+      if (act === "roof-del") {
+        const rd = roofs.find(x => x.id === id);
+        if (rd && !mine(rd)) return toast("Можно удалять только свои руфы");
+        if (!armDelete(el)) return;
+        logAct("Удалил руф «" + titleOf(bOf(rd && rd.buildingId)) + "»");
+        await db.collection("roofs").doc(id).delete();
+        return;
+      }
+
+      if (act === "b-del") {
+        if (!isAdmin()) return toast("Удалять здания может только администратор");
+        if (!armDelete(el)) return;
+        for (const r of roofs.filter(x => x.buildingId === id)) {
+          await db.collection("roofs").doc(r.id).delete();
+        }
+        logAct("Удалил здание «" + titleOf(bOf(id)) + "» и его руфы");
+        await db.collection("buildings").doc(id).delete();
+        toast("Здание и его руфы удалены");
+        return;
+      }
+
+      if (act === "send-fb") {
+        const text = $("fbText").value.trim();
+        if (!text) { $("fbText").focus(); return toast("Напиши текст"); }
+        await db.collection("feedback").add({ type: fbType, author: myName(), text, createdAt: Date.now(), authorId: myId });
+        logAct("Написал в обратную связь (" + (FB_TYPES[fbType] || fbType) + ")");
+        $("fbText").value = "";
+        toast("Спасибо, отправлено");
+        return;
+      }
+
+      if (act === "fb-del") {
+        const fbi = feedback.find(x => x.id === id);
+        if (fbi && !mine(fbi)) return toast("Можно удалять только свои сообщения");
+        if (!armDelete(el)) return;
+        logAct("Удалил отзыв от «" + ((fbi && fbi.author) || "Аноним") + "»");
+        await db.collection("feedback").doc(id).delete();
+        return;
+      }
+    } catch (err) {
+      toast("Не удалось: " + (err.code || err.message || "ошибка"));
+    }
+  });
+
+  // ---------- вкладки ----------
+  const tabs = Array.from(document.querySelectorAll(".tab"));
+  const indicator = $("indicator");
+
+  function moveIndicator(btn) {
+    const pad = 6;
+    const w = ($("tabbar").clientWidth - pad * 2) / tabs.length;
+    const i = Math.max(0, tabs.indexOf(btn));
+    indicator.style.width = w + "px";
+    indicator.style.transform = "translateX(" + (i * w) + "px)";
+  }
+
+  function setTab(target) {
+    const btn = tabs.find(t => t.dataset.target === target);
+    if (!btn) return;
+    tabs.forEach(t => t.classList.toggle("active", t === btn));
+    moveIndicator(btn);
+    $("plusBtn").classList.toggle("hide", target === "s-settings");
+    const current = document.querySelector(".screen.active");
+    const next = $(target);
+    if (current === next) return;
+    current.classList.remove("active");
+    current.classList.add("leaving");
+    setTimeout(() => current.classList.remove("leaving"), 450);
+    next.classList.add("active");
+  }
+  tabs.forEach(btn => btn.addEventListener("click", () => setTab(btn.dataset.target)));
+  window.addEventListener("resize", () => moveIndicator(tabs.find(t => t.classList.contains("active"))));
+
+  // ---------- тема ----------
+  function applyTheme(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    document.querySelectorAll("[data-theme-pick]").forEach(b => b.classList.toggle("on", b.dataset.themePick === t));
+    try { localStorage.setItem("rufers-theme", t); } catch (e) {}
+  }
+  document.querySelectorAll("[data-theme-pick]").forEach(b => b.addEventListener("click", () => applyTheme(b.dataset.themePick)));
+  let savedTheme = "dark";
+  try { savedTheme = localStorage.getItem("rufers-theme") || "dark"; } catch (e) {}
+  applyTheme(savedTheme);
+
+  // ---------- имя и обратная связь ----------
+  $("pName").value = (() => { try { return localStorage.getItem("rufers-name") || ""; } catch (e) { return ""; } })();
+  $("pName").addEventListener("change", () => {
+    try { localStorage.setItem("rufers-name", $("pName").value.trim()); } catch (e) {}
+  });
+  document.querySelectorAll("[data-fbtype]").forEach(b => b.addEventListener("click", () => {
+    fbType = b.dataset.fbtype;
+    document.querySelectorAll("[data-fbtype]").forEach(x => x.classList.toggle("on", x === b));
+  }));
+
+  // ---------- мой ID и админ ----------
+  async function getMyId() {
+    if (sbClient) {
+      try {
+        const cur = await sbClient.auth.getSession();
+        let session = cur.data && cur.data.session;
+        if (!session) {
+          const r = await sbClient.auth.signInAnonymously();
+          session = r.data && r.data.session;
+        }
+        if (session && session.user) return session.user.id;
+      } catch (e) {}
+    }
+    try {
+      const u = window.claude && claude.use ? await claude.use("user") : null;
+      if (u) { const me = await u.me(); if (me && me.id) return me.id; }
+    } catch (e) {}
+    try {
+      let id = localStorage.getItem("rufers-device");
+      if (!id) {
+        id = "d_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+        localStorage.setItem("rufers-device", id);
+      }
+      return id;
+    } catch (e) { return "anon"; }
+  }
+
+  // ---------- база: Supabase -> Claude -> телефон ----------
+  function makeLocalDb() {
+    const KEY = "rufers-local-v1";
+    let store = {};
+    try { store = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { store = {}; }
+    const subs = {};
+    const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} };
+    const snapFor = (name) => ({
+      docs: Object.entries(store[name] || {}).map(([id, data]) => ({ id, exists: true, data: () => data }))
+    });
+    const emit = (name) => (subs[name] || []).forEach(cb => cb(snapFor(name)));
+    const newId = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+    function collection(name) {
+      store[name] = store[name] || {};
+      return {
+        add(data) { const id = newId(); store[name][id] = data; persist(); emit(name); return Promise.resolve({ id }); },
+        doc(id) {
+          return {
+            id,
+            update(patch) {
+              if (!store[name][id]) return Promise.reject(new Error("not-found"));
+              store[name][id] = { ...store[name][id], ...patch };
+              persist(); emit(name);
+              return Promise.resolve();
+            },
+            delete() { delete store[name][id]; persist(); emit(name); return Promise.resolve(); }
+          };
+        },
+        onSnapshot(next) {
+          (subs[name] = subs[name] || []).push(next);
+          next(snapFor(name));
+          return () => {};
+        }
+      };
+    }
+    return { collection };
+  }
+
+  // ---------- журнал: каждое действие в приложении ----------
+  let authErr = "";
+  function logAct(text) {
+    const who = myName();
+    try {
+      // запись идёт через функцию в базе, поэтому не зависит от входа на телефоне
+      if (sbClient) {
+        sbClient.rpc("write_log", { p_text: text, p_who: who }).then(function (r) {
+          if (r.error) toast("Журнал: " + r.error.message);
+        });
+      } else if (db) {
+        db.collection("log").add({ text, who, at: Date.now() }).catch(function (err) {
+          toast("Журнал: " + (err.message || err.code || "ошибка записи"));
+        });
+      }
+    } catch (e) { toast("Журнал: " + (e.message || "ошибка")); }
+  }
+
+  // ---------- Supabase: тот же интерфейс, что у Firestore ----------
+  let sbClient = null;
+  function makeSupabaseDb(client) {
+    const loaders = {};
+    // несколько изменений подряд — одна загрузка (не дёргаем экран на каждое изменение)
+    const timers = {};
+    const reload = (table) => {
+      clearTimeout(timers[table]);
+      timers[table] = setTimeout(() => (loaders[table] || []).forEach(fn => fn()), 150);
+    };
+    // перед каждой записью убеждаемся, что вход есть; если нет — входим анонимно
+    const ready = async () => {
+      try {
+        const u = await client.auth.getUser();
+        if (!u.error && u.data.user) { authErr = ""; return; }
+        const rf = await client.auth.refreshSession();
+        if (!rf.error && rf.data.session) { authErr = ""; return; }
+        await client.auth.signOut({ scope: "local" }).catch(() => {});
+        const si = await client.auth.signInAnonymously();
+        if (si.error) throw si.error;
+        authErr = "";
+      } catch (e) {
+        authErr = (e && (e.message || e.code)) || "неизвестная ошибка входа";
+      }
+    };
+    function collection(table) {
+      return {
+        async add(data) {
+          await ready();
+          const { data: row, error } = await client.from(table).insert({ data }).select("id").single();
+          if (error) throw error;
+          reload(table);
+          return { id: row.id };
+        },
+        doc(id) {
+          return {
+            id,
+            async update(patch) {
+              await ready();
+              const cur = await client.from(table).select("data").eq("id", id).single();
+              if (cur.error) throw cur.error;
+              const { error } = await client.from(table).update({ data: { ...cur.data.data, ...patch } }).eq("id", id);
+              if (error) throw error;
+              reload(table);
+            },
+            async delete() {
+              await ready();
+              const { error } = await client.from(table).delete().eq("id", id);
+              if (error) throw error;
+              reload(table);
+            }
+          };
+        },
+        onSnapshot(next, onErr) {
+          const load = async () => {
+            const { data, error } = await client.from(table).select("id,data,created_at").order("created_at", { ascending: true });
+            if (error) { if (onErr) onErr(error); return; }
+            next({ docs: data.map(r => ({ id: r.id, data: () => r.data })) });
+          };
+          (loaders[table] = loaders[table] || []).push(load);
+          load();
+          client.channel("rt-" + table).on("postgres_changes", { event: "*", schema: "public", table: table }, () => reload(table)).subscribe();
+          return () => {};
+        }
+      };
+    }
+    return { collection };
+  }
+
+  function subscribe() {
+    // записи из корзины админа (deletedAt) в приложении не показываем
+    const toList = (snap) => snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(x => !x.deletedAt);
+    const onErr = (err) => toast("Ошибка базы: " + (err.code || err.message));
+    db.collection("buildings").onSnapshot((snap) => { buildings = toList(snap); renderAll(); }, onErr);
+    db.collection("roofs").onSnapshot((snap) => { roofs = toList(snap); renderAll(); }, onErr);
+    db.collection("feedback").onSnapshot((snap) => { feedback = toList(snap); renderFeedback(); }, onErr);
+  }
+
+  function hasSupabase() {
+    return SUPABASE_URL !== "PASTE_HERE" && !!(window.supabase && window.supabase.createClient);
+  }
+
+  function initDb() {
+    if (hasSupabase()) {
+      sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      db = makeSupabaseDb(sbClient);
+    } else if (window.claude && claude.use) {
+      claude.use("db")
+        .then((ns) => { db = ns || makeLocalDb(); subscribe(); })
+        .catch(() => { db = makeLocalDb(); subscribe(); });
+      return;
+    } else {
+      db = makeLocalDb();
+    }
+    subscribe();
+  }
+
+  initDb();
+  getMyId().then(id => { myId = id; renderAll(); renderFeedback(); });
+  renderAll();
+  renderFeedback();
+  requestAnimationFrame(() => moveIndicator(tabs[0]));
+})();
+</script>
+<script>
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  navigator.serviceWorker.register("sw.js").catch(function () {});
+}
+</script>
+</body>
+</html>
