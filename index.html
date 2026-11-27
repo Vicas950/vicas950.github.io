@@ -81,7 +81,7 @@
 
   h1 { font-size: 30px; margin: 8px 4px 4px; letter-spacing: -.02em; }
   .sub { color: var(--muted); margin: 0 4px 18px; font-size: 15px; }
-  .empty { text-align: center; color: var(--muted); padding: 50px 16px; font-size: 15px; animation: cardIn .5s both; }
+  .empty { text-align: center; color: var(--muted); padding: 50px 16px; font-size: 15px;  }
 
   @keyframes cardIn { from { opacity: 0; transform: translateY(16px) scale(.97); } to { opacity: 1; transform: none; } }
 
@@ -89,7 +89,7 @@
   .banner {
     padding: 14px 16px; border-radius: 20px; margin: 0 0 16px;
     background: linear-gradient(135deg, rgba(251,191,36,.25), rgba(249,115,22,.2));
-    border: 1px solid rgba(251,191,36,.5); font-size: 15px; line-height: 1.45; animation: cardIn .5s both;
+    border: 1px solid rgba(251,191,36,.5); font-size: 15px; line-height: 1.45; 
   }
   .banner b { display: block; margin-bottom: 4px; }
 
@@ -98,7 +98,16 @@
   .seg button {
     flex: 1; font: inherit; font-size: 14px; padding: 9px; border-radius: 999px; border: 0; background: transparent; color: var(--muted); cursor: pointer; transition: background .3s, color .3s;
   }
-  .seg button.on { background: var(--glass-strong); color: var(--text); box-shadow: inset 0 1px 0 rgba(255,255,255,.35); }
+  .seg { position: relative; }
+  .seg button { position: relative; z-index: 1; }
+  .seg button.on { background: transparent; color: var(--text); box-shadow: none; }
+  .seg-ind {
+    position: absolute; top: 4px; bottom: 4px; left: 0; width: 0; border-radius: 999px; z-index: 0;
+    background: var(--glass-strong); box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 4px 12px rgba(0,0,0,.18);
+    transition: transform .5s cubic-bezier(.34,1.3,.5,1), width .5s cubic-bezier(.34,1.3,.5,1);
+  }
+  .fade-in { animation: fadeIn .35s ease both; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
   /* ---------- лента ---------- */
   .group { margin-bottom: 24px; }
@@ -153,7 +162,7 @@
   .bcard {
     position: relative; background: var(--glass); border: 1px solid var(--glass-edge); border-radius: 20px; overflow: hidden;
     backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-    animation: cardIn .5s cubic-bezier(.2,.8,.2,1) both; transition: transform .25s cubic-bezier(.2,.8,.2,1);
+     transition: transform .25s cubic-bezier(.2,.8,.2,1);
   }
   .bcard:active { transform: scale(.97); }
   .ph { aspect-ratio: 1 / 1; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; font-size: 42px; }
@@ -165,7 +174,7 @@
   .x.edit { left: 8px; right: auto; background: rgba(0,0,0,.5); }
 
   /* ---------- руфнули ---------- */
-  .dcard { background: var(--glass); border: 1px solid var(--glass-edge); border-radius: 22px; padding: 16px; margin-bottom: 14px; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); animation: cardIn .5s both; }
+  .dcard { background: var(--glass); border: 1px solid var(--glass-edge); border-radius: 22px; padding: 16px; margin-bottom: 14px; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);  }
   .dcard h2 { font-size: 18px; margin: 0 0 4px; }
   .dcard .meta { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
   .strip { display: flex; gap: 8px; overflow-x: auto; margin-top: 10px; padding-bottom: 4px; }
@@ -175,7 +184,7 @@
   .idea {
     display: flex; gap: 12px; align-items: center; background: var(--glass); border: 1px solid var(--glass-edge);
     border-radius: 20px; padding: 10px; margin-bottom: 10px; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-    animation: cardIn .5s cubic-bezier(.2,.8,.2,1) both;
+    
   }
   .th { width: 64px; height: 64px; border-radius: 14px; flex: 0 0 64px; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; font-size: 26px; }
   .idea .txt { flex: 1; min-width: 0; }
@@ -183,7 +192,7 @@
   .idea .txt small { display: block; color: var(--muted); font-size: 13px; margin-bottom: 6px; word-break: break-word; }
 
   /* ---------- настройки ---------- */
-  .set-card { background: var(--glass); border: 1px solid var(--glass-edge); border-radius: 20px; padding: 16px; margin-bottom: 14px; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); animation: cardIn .5s cubic-bezier(.2,.8,.2,1) both; }
+  .set-card { background: var(--glass); border: 1px solid var(--glass-edge); border-radius: 20px; padding: 16px; margin-bottom: 14px; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);  }
   .set-title { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; }
   .seg2 { display: flex; gap: 8px; }
   .seg2 .opt { padding: 12px 6px; font-size: 15px; }
@@ -204,7 +213,7 @@
   @keyframes barIn { from { transform: translateY(140%); } to { transform: none; } }
   .tabbar {
     position: relative; pointer-events: auto; width: 100%; height: 66px; border-radius: 34px;
-    display: grid; grid-template-columns: repeat(4, 1fr); padding: 6px;
+    display: grid; grid-template-columns: repeat(5, 1fr); padding: 6px;
     background: linear-gradient(180deg, var(--dock-top), var(--dock-bottom));
     backdrop-filter: blur(26px) saturate(190%) brightness(1.08);
     -webkit-backdrop-filter: blur(26px) saturate(190%) brightness(1.08);
@@ -243,6 +252,85 @@
     transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .3s ease;
   }
   .plus:active { transform: scale(.88) rotate(45deg); }
+
+  /* ---------- чат ---------- */
+  :root { --bub-other: rgba(255,255,255,.14); --bub-mine: #3b82f6; }
+  :root[data-theme="light"] { --bub-other: #ffffff; }
+  #s-chat { padding-bottom: 260px; }
+  .enter { animation: cardIn .5s cubic-bezier(.2,.8,.2,1) both; }
+  .msg-row.enter { animation: msgIn .38s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes msgIn { from { opacity: 0; transform: translateY(10px) scale(.94); } to { opacity: 1; transform: none; } }
+  .btn, .opt, .chip, .pickrow, .sharebtn, .sendbtn, .tab, .seg button, .x {
+    transition: transform .2s cubic-bezier(.2,.8,.2,1), background .25s, color .25s, box-shadow .25s, opacity .25s;
+  }
+  .btn:active, .opt:active, .pickrow:active, .x:active { transform: scale(.94); }
+  .set-card, .banner { transition: opacity .3s; }
+  .chat-list { display: flex; flex-direction: column; gap: 8px; }
+  .msg-row { display: flex; flex-direction: column; max-width: 90%; }
+  .msg-row.me { align-self: flex-end; align-items: flex-end; }
+  .msg-row.other { align-self: flex-start; align-items: flex-start; }
+  .sender { font-size: 14px; font-weight: 600; color: #7dd3fc; margin: 0 8px 5px; }
+  .bubble {
+    position: relative; padding: 15px 19px; border-radius: 24px; font-size: 18px; line-height: 1.5;
+    white-space: pre-wrap; word-break: break-word; box-shadow: 0 1px 2px rgba(0,0,0,.25);
+  }
+  .me .bubble { background: var(--bub-mine); color: #fff; border-bottom-right-radius: 6px; }
+  .other .bubble { background: var(--bub-other); color: var(--text); border-bottom-left-radius: 6px; }
+  /* хвостик */
+  .me .bubble::after {
+    content: ""; position: absolute; right: -8px; bottom: 0; width: 14px; height: 16px;
+    background: var(--bub-mine); clip-path: polygon(0 0, 100% 100%, 0 100%);
+  }
+  .other .bubble::before {
+    content: ""; position: absolute; left: -8px; bottom: 0; width: 14px; height: 16px;
+    background: var(--bub-other); clip-path: polygon(100% 0, 0 100%, 100% 100%);
+  }
+  .meta { font-size: 13px; color: var(--muted); margin: 5px 8px 0; }
+  .chatbar {
+    position: fixed; left: 16px; right: 16px; max-width: 480px; margin: 0 auto; z-index: 6;
+    bottom: calc(88px + env(safe-area-inset-bottom, 0px)); display: none; gap: 8px; align-items: flex-end; padding: 8px;
+    border-radius: 22px; background: transparent; border: 0;
+  }
+  body.chat-open .chatbar { display: flex; }
+  .chatbar { flex-direction: column; align-items: stretch; gap: 6px; }
+  .inputrow { display: flex; gap: 8px; align-items: flex-end; }
+  .replybar { display: none; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 14px; background: var(--chip); font-size: 14px; }
+  .replybar.show { display: flex; }
+  #replyText { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rbx { border: 0; background: none; color: var(--text); font-size: 20px; line-height: 1; cursor: pointer; padding: 0 4px; }
+  body.reply-open .share-bubble { bottom: calc(215px + env(safe-area-inset-bottom, 0px)); }
+  .quote { border-left: 3px solid #7dd3fc; padding: 4px 8px; margin-bottom: 6px; border-radius: 6px; background: rgba(0,0,0,.14); font-size: 13px; }
+  .quote b { display: block; font-size: 12.5px; color: #7dd3fc; }
+  .quote span { display: block; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tbadge { position: absolute; top: 2px; right: 8px; min-width: 18px; height: 18px; border-radius: 9px; background: #ef4444; color: #fff; font-size: 11px; line-height: 18px; text-align: center; padding: 0 5px; display: none; }
+  .tbadge:not(:empty) { display: block; }
+  #chatList { touch-action: pan-y; }
+  .bubble, .share { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  .chatbar textarea { flex: 1; margin: 0; min-height: 44px; max-height: 120px; border-radius: 16px; padding: 10px 12px; resize: none; font-size: 16px; }
+  .sendbtn { flex: 0 0 44px; width: 44px; height: 44px; border-radius: 50%; border: 0; background: #3b82f6; color: #fff; font-size: 18px; cursor: pointer; }
+  .sendbtn:active { transform: scale(.9); }
+  .share-bubble {
+    position: fixed; left: 16px; bottom: calc(164px + env(safe-area-inset-bottom, 0px));
+    width: min(340px, calc(100% - 32px)); max-height: 56vh; overflow-y: auto; z-index: 7;
+    padding: 14px; border-radius: 26px; background: var(--panel); border: 1px solid var(--glass-edge);
+    backdrop-filter: blur(26px) saturate(170%); -webkit-backdrop-filter: blur(26px) saturate(170%);
+    box-shadow: 0 18px 40px rgba(0,0,0,.35);
+    transform-origin: 30px 100%; transform: scale(.15); opacity: 0; pointer-events: none;
+    transition: transform .45s cubic-bezier(.34,1.3,.5,1), opacity .25s ease;
+  }
+  .share-bubble.open { transform: scale(1); opacity: 1; pointer-events: auto; }
+  .share-bubble::after {
+    content: ""; position: absolute; left: 22px; bottom: -8px; width: 16px; height: 16px;
+    background: var(--panel); transform: rotate(45deg);
+  }
+  .sharebtn { transition: transform .35s cubic-bezier(.34,1.3,.5,1), background .3s; }
+  .sharebtn.open { transform: rotate(45deg); }
+  .sharebtn { flex: 0 0 44px; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--glass-edge); background: var(--glass-strong); color: var(--text); font-size: 22px; line-height: 1; cursor: pointer; }
+  .bubble.share { padding: 10px; display: flex; gap: 12px; align-items: center; min-width: 240px; cursor: pointer; }
+  .sc-thumb { width: 64px; height: 64px; flex: 0 0 64px; border-radius: 16px; background-size: cover; background-position: center; }
+  .sc-txt { min-width: 0; }
+  .sc-txt b { display: block; font-size: 16px; word-break: break-word; }
+  .sc-txt small { display: block; font-size: 14px; opacity: .75; margin-top: 2px; }
   .plus.hide { opacity: 0; transform: scale(.6); pointer-events: none; }
   #pBuilding.simple .full { display: none; }
   #pRoof.nodate .dfield { display: none; }
@@ -329,10 +417,16 @@
       <div id="feed"></div>
     </section>
 
+    <section class="screen" id="s-chat">
+      <h1>Чат</h1>
+      <p class="sub">Общий чат компании</p>
+      <div class="chat-list" id="chatList"></div>
+    </section>
+
     <section class="screen" id="s-buildings">
       <h1>Здания</h1>
       <p class="sub">Все здания посёлка и сделанные руфы</p>
-      <div class="seg">
+      <div class="seg"><span class="seg-ind"></span>
         <button class="on" data-bseg="b">Здания</button>
         <button data-bseg="done">Руфнули</button>
       </div>
@@ -350,12 +444,12 @@
       <h1>Настройки</h1>
       <p class="sub">Оформление и информация</p>
 
-      <div class="set-card">
+      <div class="set-card enter">
         <div class="set-title">Твоё имя</div>
         <input type="text" id="pName" placeholder="Как тебя видят другие">
       </div>
 
-      <div class="set-card">
+      <div class="set-card enter">
         <div class="set-title">Тема</div>
         <div class="seg2">
           <button class="opt" data-theme-pick="light">☀️ Светлая</button>
@@ -363,13 +457,13 @@
         </div>
       </div>
 
-      <div class="set-card">
+      <div class="set-card enter">
         <div class="set-title">Создатели</div>
         <div class="set-row">Vicas (Ваня Глухих)</div>
         <div class="set-row">Великий Claude</div>
       </div>
 
-      <div class="set-card">
+      <div class="set-card enter">
         <div class="set-title">Обратная связь</div>
         <div class="seg2" id="fbType">
           <button class="opt on" data-fbtype="bug">🐞 Баг</button>
@@ -383,7 +477,7 @@
         <div id="fbList"></div>
       </div>
 
-      <div class="ver">Версия 1.1.0</div>
+      <div class="ver">Версия 1.2</div>
     </section>
   </div>
 
@@ -393,6 +487,10 @@
       <button class="tab active" data-target="s-home">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/></svg>
         Главная
+      </button>
+      <button class="tab" data-target="s-chat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
+        Чат<span class="tbadge" id="chatBadge"></span>
       </button>
       <button class="tab" data-target="s-buildings">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="7" height="12" rx="1"/><rect x="13" y="4" width="7" height="17" rx="1"/><path d="M7 13h1M7 16h1M16 8h1M16 11h1M16 14h1"/></svg>
@@ -413,6 +511,12 @@
 
 <!-- выбор здания (из «+») -->
 <div class="overlay" id="overlay">
+  <div class="panel" id="pMsg">
+    <div class="grab"></div>
+    <h2>Сообщение</h2>
+    <div id="msgMenu"></div>
+  </div>
+
   <div class="panel" id="pPick">
     <div class="grab"></div>
     <h2>Какой руф добавить?</h2>
@@ -486,6 +590,23 @@
   </div>
 </div>
 
+<div class="share-bubble" id="shareBubble">
+  <div class="seg" style="margin:0 0 12px"><span class="seg-ind"></span>
+    <button class="on" data-stab="b">Здания</button>
+    <button data-stab="r">Руфы</button>
+  </div>
+  <div id="shareList"></div>
+</div>
+
+<div class="chatbar">
+  <div class="replybar" id="replyBar"><span id="replyText"></span><button class="rbx" data-act="reply-cancel" aria-label="Отмена">×</button></div>
+  <div class="inputrow">
+    <button class="sharebtn" id="shareBtn" aria-label="Поделиться">＋</button>
+    <textarea id="chatText" rows="1" placeholder="Написать..."></textarea>
+    <button class="sendbtn" id="sendBtn" data-act="chat-send" aria-label="Отправить">➤</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- Supabase: база и вход -->
@@ -523,6 +644,7 @@
   let editBId = "", editRoofId = "", roofBid = "", doneRoofId = "";
   let flowNoDate = false, simpleMode = false, roofNoDate = false;
   let fbType = "bug";
+  let messages = [];
 
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s == null ? "" : s)
@@ -681,12 +803,12 @@
     let gi = 0;
     groups.forEach((items, date) => {
       const past = date < today;
-      html += '<div class="group" style="animation: cardIn .5s ' + (gi * 80) + 'ms both">' +
+      html += '<div class="group">' +
         '<div class="gh' + (past ? " past" : "") + '">' + esc(dayLabel(date)) + "</div>";
       items.forEach((r, i) => {
         const b = bOf(r.buildingId);
         const own = mine(r);
-        html += '<article class="roof-card" style="animation-delay:' + (gi * 80 + i * 60) + 'ms;' + (past ? "opacity:.6" : "") + '">' +
+        html += '<article class="roof-card' + enterCls(r.id) + '" style="animation-delay:' + (gi * 80 + i * 60) + 'ms;' + (past ? "opacity:.6" : "") + '">' +
           '<div class="cover" style="' + coverStyle(b) + '">' + (photosOf(b).length ? "" : '<span class="emoji">🏢</span>') + "</div>" +
           '<div class="body">' +
             "<h2>" + esc(titleOf(b)) + "</h2>" +
@@ -719,7 +841,7 @@
     }
     $("bgrid").innerHTML = list.map((b, i) => {
       const own = mine(b);
-      return '<div class="bcard" style="animation-delay:' + (i * 50) + 'ms">' +
+      return '<div class="bcard' + enterCls(b.id) + '" style="animation-delay:' + (i * 50) + 'ms">' +
         (own ? '<button class="x edit" data-act="b-edit" data-id="' + esc(b.id) + '" aria-label="Изменить">✎</button>' : "") +
         (isAdmin() ? '<button class="x" data-act="b-del" data-id="' + esc(b.id) + '" aria-label="Удалить">×</button>' : "") +
         '<div class="ph" style="' + coverStyle(b) + '">' + (photosOf(b).length ? "" : "🏢") + "</div>" +
@@ -737,7 +859,7 @@
     $("doneList").innerHTML = list.map((r, i) => {
       const b = bOf(r.buildingId);
       const photos = r.reportPhotos || [];
-      return '<div class="dcard" style="animation-delay:' + (i * 60) + 'ms">' +
+      return '<div class="dcard' + enterCls(r.id) + '" style="animation-delay:' + (i * 60) + 'ms">' +
         "<h2>" + esc(titleOf(b)) + "</h2>" +
         '<div class="meta">Руфнули · ' + fmtShort(r.doneDate || r.date) + "</div>" +
         (r.reportNote ? '<p class="sec">' + esc(r.reportNote) + "</p>" : "") +
@@ -761,7 +883,7 @@
     $("ideas").innerHTML = list.map((r, i) => {
       const b = bOf(r.buildingId);
       const own = mine(r);
-      return '<div class="idea" style="animation-delay:' + (i * 60) + 'ms">' +
+      return '<div class="idea' + enterCls(r.id) + '" style="animation-delay:' + (i * 60) + 'ms">' +
         '<div class="th" style="' + coverStyle(b) + '">' + (photosOf(b).length ? "" : "🏢") + "</div>" +
         '<div class="txt"><b>' + esc(titleOf(b)) + "</b>" +
           (b && b.name ? "<small>" + esc(b.address) + "</small>" : "") +
@@ -784,7 +906,7 @@
       return;
     }
     $("fbList").innerHTML = list.map(f =>
-      '<div class="fb-item">' +
+      '<div class="fb-item' + enterCls(f.id) + '">' +
         '<div class="fb-head"><span>' + esc(FB_TYPES[f.type] || "") + " · " + esc(f.author || "Аноним") + " · " +
           esc(new Date(f.createdAt || 0).toLocaleDateString("ru-RU", { day: "numeric", month: "short" })) + "</span>" +
           (mine(f) ? '<button class="btn danger" style="padding:4px 10px" data-act="fb-del" data-id="' + esc(f.id) + '">×</button>' : "") +
@@ -793,6 +915,209 @@
         (f.reply ? '<div class="fb-reply"><b>Ответ:</b> ' + esc(f.reply) + "</div>" : "") +
       "</div>"
     ).join("");
+  }
+
+  const seenIds = new Set();
+  function enterCls(id) {
+    if (seenIds.has(id)) return "";
+    seenIds.add(id);
+    return " enter";
+  }
+
+  // ---------- чат: ответы, редактирование, уведомления ----------
+  let replyTo = null, editMsgId = "", chatInited = false, lastChatSeen = 0, unreadCount = 0;
+  try { lastChatSeen = Number(localStorage.getItem("rufers-chat-seen")) || 0; } catch (e) {}
+
+  function saveSeen() { try { localStorage.setItem("rufers-chat-seen", String(lastChatSeen)); } catch (e) {} }
+  function updateBadge() {
+    $("chatBadge").textContent = unreadCount > 0 ? (unreadCount > 99 ? "99+" : String(unreadCount)) : "";
+  }
+  function markChatRead() {
+    lastChatSeen = Date.now();
+    saveSeen();
+    unreadCount = 0;
+    updateBadge();
+  }
+  function notifyNew(list) {
+    const others = list.filter(m => m.authorId && m.authorId !== myId);
+    if (!chatInited) {
+      if (!list.length) return;
+      chatInited = true;
+      if (!lastChatSeen) lastChatSeen = list.reduce((mx, m) => Math.max(mx, m.at || 0), 0);
+      unreadCount = others.filter(m => (m.at || 0) > lastChatSeen).length;
+      updateBadge();
+      return;
+    }
+    if ($("s-chat").classList.contains("active")) { markChatRead(); return; }
+    const fresh = others.filter(m => (m.at || 0) > lastChatSeen);
+    const prev = unreadCount;
+    unreadCount = fresh.length;
+    updateBadge();
+    if (fresh.length > prev) {
+      const last = fresh[fresh.length - 1];
+      toast((last.who || "Кто-то") + ": " + (last.type === "share" ? "поделился карточкой" : (last.text || "").slice(0, 40)));
+      try { if (navigator.vibrate) navigator.vibrate(120); } catch (e) {}
+    }
+  }
+
+  function msgPreview(m) { return m.type === "share" ? "Карточка" : (m.text || "").slice(0, 80); }
+
+  function showReplyBar(t) {
+    $("replyText").textContent = t;
+    $("replyBar").classList.add("show");
+    document.body.classList.add("reply-open");
+    $("sendBtn").textContent = editMsgId ? "✓" : "➤";
+  }
+  function hideReplyBar() {
+    $("replyBar").classList.remove("show");
+    document.body.classList.remove("reply-open");
+    $("sendBtn").textContent = "➤";
+  }
+  function clearReply() {
+    replyTo = null;
+    editMsgId = "";
+    hideReplyBar();
+    $("chatText").value = "";
+  }
+  function startReply(mid) {
+    const m = messages.find(x => x.id === mid);
+    if (!m) return;
+    editMsgId = "";
+    replyTo = { id: m.id, who: m.who || "Аноним", text: msgPreview(m) };
+    showReplyBar("Ответ: " + replyTo.who + " — " + replyTo.text);
+    $("chatText").focus();
+  }
+  function startEdit(mid) {
+    const m = messages.find(x => x.id === mid);
+    if (!m || m.authorId !== myId || m.type === "share") return;
+    replyTo = null;
+    editMsgId = mid;
+    showReplyBar("Редактирование сообщения");
+    $("chatText").value = m.text || "";
+    $("chatText").focus();
+  }
+  function openMsgMenu(mid) {
+    const m = messages.find(x => x.id === mid);
+    if (!m) return;
+    const own = m.authorId === myId;
+    $("msgMenu").innerHTML =
+      '<div class="hint" style="margin:0 0 10px">' + esc(msgPreview(m)) + "</div>" +
+      '<button class="pickrow" data-act="msg-reply" data-id="' + esc(mid) + '"><span><b>↩ Ответить</b></span></button>' +
+      (own && m.type !== "share" ? '<button class="pickrow" data-act="msg-edit" data-id="' + esc(mid) + '"><span><b>✏ Редактировать</b></span></button>' : "") +
+      (own ? '<button class="pickrow" data-act="msg-del" data-id="' + esc(mid) + '"><span><b style="color:#fca5a5">🗑 Удалить</b></span></button>' : "");
+    showPanel("pMsg");
+  }
+
+  function renderChat() {
+    const list = messages.slice().sort((x, y) => (x.at || 0) - (y.at || 0)).slice(-200);
+    notifyNew(list);
+    if (!list.length) {
+      $("chatList").innerHTML = '<div class="empty">Сообщений пока нет. Напиши первым.</div>';
+      return;
+    }
+    $("chatList").innerHTML = list.map(m => {
+      const me = m.authorId === myId;
+      const time = m.at ? new Date(m.at).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }) : "";
+      let inner;
+      if (m.type === "share") {
+        const ref = m.kind === "building" ? bOf(m.refId) : roofs.find(x => x.id === m.refId);
+        const bb = m.kind === "building" ? ref : (ref ? bOf(ref.buildingId) : null);
+        const title = m.kind === "building" ? titleOf(ref) : titleOf(bb);
+        const sub = m.kind === "building"
+          ? (ref ? ref.address : "")
+          : (ref ? (ref.date ? fmtShort(ref.date) : "Идея, без даты") : "");
+        inner = '<div class="bubble share" data-act="open-share" data-kind="' + esc(m.kind) + '">' +
+          '<div class="sc-thumb" style="' + coverStyle(bb) + '"></div>' +
+          '<div class="sc-txt"><b>' + esc(title) + "</b><small>" + esc(sub) + "</small></div>" +
+        "</div>";
+      } else {
+        const quote = m.replyTo
+          ? '<div class="quote"><b>' + esc(m.replyTo.who || "") + "</b><span>" + esc(m.replyTo.text || "") + "</span></div>"
+          : "";
+        inner = '<div class="bubble">' + quote + esc(m.text) + "</div>";
+      }
+      return '<div class="msg-row ' + (me ? "me" : "other") + enterCls(m.id) + '" data-mid="' + esc(m.id) + '">' +
+        (me ? "" : '<div class="sender">' + esc(m.who || "Аноним") + "</div>") +
+        inner +
+        '<div class="meta">' + esc(time) + (m.editedAt ? " · изменено" : "") + "</div>" +
+      "</div>";
+    }).join("");
+    if (document.getElementById("s-chat").classList.contains("active")) {
+      $("s-chat").scrollTop = $("s-chat").scrollHeight;
+    }
+  }
+
+  // ---------- окно «Поделиться» ----------
+  let shareTab = "b";
+  function setShareTab(t) {
+    shareTab = t;
+    document.querySelectorAll("[data-stab]").forEach(x => x.classList.toggle("on", x.dataset.stab === t));
+    moveSeg(document.querySelector("[data-stab].on")?.parentElement);
+    renderShare(t);
+    playFade($("shareList"));
+  }
+  function renderShare(t) {
+    const list = t === "b"
+      ? buildings.slice().sort((x, y) => (y.createdAt || 0) - (x.createdAt || 0))
+      : roofs.filter(r => !r.done).slice().sort((x, y) => (x.date || "9999").localeCompare(y.date || "9999"));
+    if (!list.length) {
+      $("shareList").innerHTML = '<div class="hint" style="margin:6px 0 12px">Пока пусто</div>';
+      return;
+    }
+    $("shareList").innerHTML = list.map(x => {
+      const b = t === "b" ? x : bOf(x.buildingId);
+      const title = titleOf(b);
+      const sub = t === "b" ? (x.address || "") : (x.date ? fmtShort(x.date) : "Идея, без даты");
+      return '<button class="pickrow" data-act="share-pick" data-kind="' + (t === "b" ? "building" : "roof") + '" data-id="' + esc(x.id) + '">' +
+        '<div class="th" style="' + coverStyle(b) + '">' + (photosOf(b).length ? "" : "🏢") + "</div>" +
+        "<span><b>" + esc(title) + "</b><br><small>" + esc(sub) + "</small></span></button>";
+    }).join("");
+  }
+  function openShare() {
+    setShareTab("b");
+    $("shareBubble").classList.add("open");
+    $("shareBtn").classList.add("open");
+  }
+  function closeShare() {
+    $("shareBubble").classList.remove("open");
+    $("shareBtn").classList.remove("open");
+  }
+  async function sendShare(kind, id) {
+    if (!db) return;
+    if (!myId) myId = await getMyId();
+    await db.collection("messages").add({ type: "share", kind, refId: id, who: myName(), authorId: myId, at: Date.now() });
+  }
+  document.querySelectorAll("[data-stab]").forEach(b => b.addEventListener("click", () => setShareTab(b.dataset.stab)));
+  $("shareBtn").addEventListener("click", () => {
+    if ($("shareBubble").classList.contains("open")) closeShare(); else openShare();
+  });
+  document.addEventListener("click", (e) => {
+    if (!$("shareBubble").classList.contains("open")) return;
+    if ($("shareBubble").contains(e.target) || e.target.closest("#shareBtn")) return;
+    closeShare();
+  });
+
+  async function sendChat() {
+    const text = $("chatText").value.trim();
+    if (!text || !db) return;
+    if (editMsgId) {
+      const id = editMsgId;
+      clearReply();
+      try {
+        await db.collection("messages").doc(id).update({ text, editedAt: Date.now() });
+      } catch (err) { toast("Не изменилось: " + (err.message || "ошибка")); }
+      return;
+    }
+    const rt = replyTo;
+    $("chatText").value = "";
+    replyTo = null;
+    hideReplyBar();
+    try {
+      if (!myId) myId = await getMyId();
+      const data = { text, who: myName(), authorId: myId, at: Date.now() };
+      if (rt) data.replyTo = { id: rt.id, who: rt.who, text: rt.text };
+      await db.collection("messages").add(data);
+    } catch (err) { toast("Не отправилось: " + (err.message || "ошибка")); }
   }
 
   function renderAll() {
@@ -885,10 +1210,31 @@
   }
 
   // ---------- сегмент «Здания / Руфнули» ----------
+  function moveSeg(seg) {
+    if (!seg) return;
+    const ind = seg.querySelector(".seg-ind");
+    const on = seg.querySelector("button.on");
+    if (!ind || !on) return;
+    ind.style.width = on.offsetWidth + "px";
+    ind.style.transform = "translateX(" + on.offsetLeft + "px)";
+  }
+  function refreshSegs() {
+    document.querySelectorAll(".seg").forEach(moveSeg);
+  }
+  function playFade(el) {
+    if (!el) return;
+    el.classList.remove("fade-in");
+    void el.offsetWidth;
+    el.classList.add("fade-in");
+  }
+
   function setBSeg(v) {
     document.querySelectorAll("[data-bseg]").forEach(b => b.classList.toggle("on", b.dataset.bseg === v));
+    const was = v === "b" ? $("bgrid") : $("doneList");
     $("bgrid").classList.toggle("hidden", v !== "b");
     $("doneList").classList.toggle("hidden", v !== "done");
+    moveSeg(document.querySelector("[data-bseg].on")?.parentElement);
+    playFade(was);
   }
   document.querySelectorAll("[data-bseg]").forEach(b => b.addEventListener("click", () => setBSeg(b.dataset.bseg)));
 
@@ -918,7 +1264,7 @@
   // ---------- «+» зависит от вкладки ----------
   $("plusBtn").addEventListener("click", () => {
     const tab = document.querySelector(".screen.active").id;
-    if (tab === "s-settings") return;
+    if (tab === "s-settings" || tab === "s-chat") return;
     if (tab === "s-buildings") return openBuildingForm(null, true);
     flowNoDate = tab === "s-ideas";
     openPick();
@@ -1060,6 +1406,28 @@
         return;
       }
 
+      if (act === "chat-send") return sendChat();
+      if (act === "msg-reply") { closeSheet(); startReply(id); return; }
+      if (act === "msg-edit") { closeSheet(); startEdit(id); return; }
+      if (act === "reply-cancel") { clearReply(); return; }
+      if (act === "share-pick") {
+        await sendShare(el.dataset.kind, id);
+        closeShare();
+        return;
+      }
+      if (act === "open-share") {
+        setTab(el.dataset.kind === "building" ? "s-buildings" : "s-home");
+        return;
+      }
+      if (act === "msg-del") {
+        const mm = messages.find(x => x.id === id);
+        if (mm && !mine(mm)) return toast("Можно удалять только свои сообщения");
+        if (!armDelete(el)) return;
+        closeSheet();
+        await db.collection("messages").doc(id).delete();
+        return;
+      }
+
       if (act === "send-fb") {
         const text = $("fbText").value.trim();
         if (!text) { $("fbText").focus(); return toast("Напиши текст"); }
@@ -1100,7 +1468,10 @@
     if (!btn) return;
     tabs.forEach(t => t.classList.toggle("active", t === btn));
     moveIndicator(btn);
-    $("plusBtn").classList.toggle("hide", target === "s-settings");
+    $("plusBtn").classList.toggle("hide", target === "s-settings" || target === "s-chat");
+    document.body.classList.toggle("chat-open", target === "s-chat");
+    if (target === "s-chat") markChatRead();
+    closeShare();
     const current = document.querySelector(".screen.active");
     const next = $(target);
     if (current === next) return;
@@ -1108,6 +1479,7 @@
     current.classList.add("leaving");
     setTimeout(() => current.classList.remove("leaving"), 450);
     next.classList.add("active");
+    if (target === "s-chat") renderChat();
   }
   tabs.forEach(btn => btn.addEventListener("click", () => setTab(btn.dataset.target)));
   window.addEventListener("resize", () => moveIndicator(tabs.find(t => t.classList.contains("active"))));
@@ -1133,6 +1505,52 @@
     document.querySelectorAll("[data-fbtype]").forEach(x => x.classList.toggle("on", x === b));
   }));
 
+  (function setupGestures() {
+    const list = $("chatList");
+    let row = null, sx = 0, sy = 0, timer = null, swiping = false, bub = null;
+    list.addEventListener("pointerdown", (e) => {
+      const r = e.target.closest(".msg-row");
+      if (!r) return;
+      row = r; sx = e.clientX; sy = e.clientY; swiping = false;
+      bub = r.querySelector(".bubble, .share");
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        if (!row || swiping) return;
+        const id = row.dataset.mid;
+        row = null;
+        try { if (navigator.vibrate) navigator.vibrate(15); } catch (e2) {}
+        openMsgMenu(id);
+      }, 450);
+    });
+    list.addEventListener("pointermove", (e) => {
+      if (!row) return;
+      const dx = e.clientX - sx, dy = e.clientY - sy;
+      if (!swiping && Math.abs(dy) > 10) { clearTimeout(timer); row = null; return; }
+      if (dx < -8) { swiping = true; clearTimeout(timer); }
+      if (swiping && bub) {
+        bub.style.transition = "none";
+        bub.style.transform = "translateX(" + Math.min(0, Math.max(dx, -90)) + "px)";
+      }
+    });
+    const end = (e) => {
+      clearTimeout(timer);
+      if (!row) return;
+      const dx = e.clientX - sx;
+      if (bub) {
+        bub.style.transition = "transform .25s ease";
+        bub.style.transform = "";
+      }
+      if (swiping && dx < -60) startReply(row.dataset.mid);
+      row = null; bub = null; swiping = false;
+    };
+    list.addEventListener("pointerup", end);
+    list.addEventListener("pointercancel", end);
+  })();
+
+  $("chatText").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(); }
+  });
+
   // ---------- мой ID и админ ----------
   async function getMyId() {
     if (sbClient) {
@@ -1157,7 +1575,10 @@
         localStorage.setItem("rufers-device", id);
       }
       return id;
-    } catch (e) { return "anon"; }
+    } catch (e) {
+      if (!getMyId.mem) getMyId.mem = "m_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+      return getMyId.mem;
+    }
   }
 
   // ---------- база: Supabase -> Claude -> телефон ----------
@@ -1211,7 +1632,7 @@
         p_key: id,
         p_name: myName(),
         p_info: (standalone ? "приложение" : "браузер") + ", " + platform,
-        p_version: "1.1.0"
+        p_version: "1.2"
       }).then(function () {});
     } catch (e) {}
   }
@@ -1308,6 +1729,7 @@
     db.collection("buildings").onSnapshot((snap) => { buildings = toList(snap); renderAll(); }, onErr);
     db.collection("roofs").onSnapshot((snap) => { roofs = toList(snap); renderAll(); }, onErr);
     db.collection("feedback").onSnapshot((snap) => { feedback = toList(snap); renderFeedback(); }, onErr);
+    db.collection("messages").onSnapshot((snap) => { messages = toList(snap); renderChat(); }, onErr);
   }
 
   function hasSupabase() {
@@ -1330,10 +1752,11 @@
   }
 
   initDb();
-  getMyId().then(id => { myId = id; renderAll(); renderFeedback(); touchDevice(id); });
+  getMyId().then(id => { myId = id; renderAll(); renderFeedback(); renderChat(); touchDevice(id); });
   renderAll();
   renderFeedback();
-  requestAnimationFrame(() => moveIndicator(tabs[0]));
+  requestAnimationFrame(() => { moveIndicator(tabs[0]); refreshSegs(); });
+  window.addEventListener("resize", refreshSegs);
 })();
 </script>
 <script>
